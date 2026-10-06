@@ -26,6 +26,7 @@
       -webkit-font-smoothing: antialiased;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     body {
       margin: 0 auto;
       max-width: 520px;
@@ -172,6 +173,8 @@
       font-weight: 600;
       text-decoration: none;
     }
+    button.open { border: 0; font-family: inherit; cursor: pointer; }
+    #live { margin-bottom: 18px; }
     .empty {
       display: grid;
       place-items: center;
@@ -210,6 +213,16 @@
     <div id="pill" class="pill"><span class="dot"></span><span id="pill-text">Connecting…</span></div>
   </header>
   <div id="error"></div>
+
+  <div class="card" id="live">
+    <img id="live-frame" class="media" alt="Live HDMI preview" hidden>
+    <video id="live-video" class="media" playsinline controls hidden></video>
+    <div id="live-empty" class="empty">No live signal</div>
+    <div class="row">
+      <div class="meta"><strong id="live-title">Live preview</strong><span id="live-sub">Updates twice a second, no sound</span></div>
+      <button id="live-toggle" class="open" type="button">Watch with sound</button>
+    </div>
+  </div>
 
   <div class="actions">
     <button id="shot" class="action" type="button">
@@ -374,6 +387,76 @@
         refresh();
       }
     }
+
+    let liveVideo = false;
+    let frameTimer = null;
+    let frameUrl = null;
+
+    function showLive(mode) {
+      $("live-frame").hidden = mode !== "frame";
+      $("live-video").hidden = mode !== "video";
+      $("live-empty").hidden = mode !== "empty";
+    }
+
+    let framePending = false;
+
+    async function pollFrame() {
+      clearTimeout(frameTimer);
+      if (liveVideo || document.hidden || framePending) return;
+      framePending = true;
+      try {
+        const res = await fetch("/live/frame.jpg", { cache: "no-store" });
+        if (!res.ok) throw new Error(res.statusText);
+        const url = URL.createObjectURL(await res.blob());
+        if (liveVideo) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        $("live-frame").src = url;
+        if (frameUrl) URL.revokeObjectURL(frameUrl);
+        frameUrl = url;
+        showLive("frame");
+      } catch (err) {
+        if (!liveVideo) showLive("empty");
+      } finally {
+        framePending = false;
+      }
+      if (!liveVideo) frameTimer = setTimeout(pollFrame, 500);
+    }
+
+    function setLiveVideo(on) {
+      liveVideo = on;
+      const video = $("live-video");
+      if (on) {
+        clearTimeout(frameTimer);
+        video.src = "/live/stream.m3u8";
+        video.play().catch(() => {});
+        showLive("video");
+        $("live-title").textContent = "Live video";
+        $("live-sub").textContent = "A few seconds behind, with sound";
+        $("live-toggle").textContent = "Back to preview";
+      } else {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+        $("live-title").textContent = "Live preview";
+        $("live-sub").textContent = "Updates twice a second, no sound";
+        $("live-toggle").textContent = "Watch with sound";
+        pollFrame();
+      }
+    }
+
+    if ($("live-video").canPlayType("application/vnd.apple.mpegurl") === "") {
+      $("live-toggle").hidden = true;
+    }
+    $("live-toggle").addEventListener("click", () => setLiveVideo(!liveVideo));
+    $("live-video").addEventListener("error", () => {
+      if (!liveVideo) return;
+      setLiveVideo(false);
+      toast("Live video stopped. Try again in a few seconds.", true);
+    });
+    document.addEventListener("visibilitychange", pollFrame);
+    pollFrame();
 
     $("shot").addEventListener("click", () => action($("shot"), "/api/screenshot", "Grabbing…"));
     $("replay").addEventListener("click", () => action($("replay"), "/api/replay", "Saving clip…"));

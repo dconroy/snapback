@@ -27,6 +27,7 @@ DEFAULT_RUNTIME_DIR = "~/snapback-runtime"
 SEGMENT_TEMPLATE = "seg_%06d.ts"
 SEGMENT_RE = re.compile(r"^seg_(\d{6})\.ts$")
 LATEST_FRAME_NAME = "latest.jpg"
+LIVE_WINDOW_SEGMENTS = 6
 BUFFER_LOG_NAME = "ffmpeg-buffer.log"
 X264_PRESETS = (
     "ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow",
@@ -264,16 +265,22 @@ class CaptureEngine:
     def take_photo(self) -> MediaItem:
         return self._capture_still("photo")
 
-    def _screenshot_from_buffer(self) -> MediaItem:
+    def _read_fresh_frame(self) -> bytes | None:
         frame_path = self.config.buffer_dir / LATEST_FRAME_NAME
         max_age = max(3.0, 3.0 / self.config.screenshot_fps)
+        try:
+            data = frame_path.read_bytes()
+            age = time.time() - frame_path.stat().st_mtime
+        except FileNotFoundError:
+            return None
+        if data.startswith(b"\xff\xd8") and data.rstrip(b"\x00").endswith(b"\xff\xd9") and age <= max_age:
+            return data
+        return None
+
+    def _screenshot_from_buffer(self) -> MediaItem:
         for _ in range(3):
-            try:
-                data = frame_path.read_bytes()
-                age = time.time() - frame_path.stat().st_mtime
-            except FileNotFoundError:
-                data, age = b"", 0.0
-            if data.startswith(b"\xff\xd8") and data.rstrip(b"\x00").endswith(b"\xff\xd9") and age <= max_age:
+            data = self._read_fresh_frame()
+            if data is not None:
                 break
             time.sleep(0.5)
         else:
@@ -518,6 +525,39 @@ class CaptureEngine:
         segments = self._all_segments()
         for old in segments[:-keep]:
             old.unlink(missing_ok=True)
+
+    # ----- live view --------------------------------------------------------
+
+    def live_frame(self) -> bytes | None:
+        """The buffer's newest JPEG frame, or None if the buffer isn't producing one."""
+        if not self.buffer_running:
+            return None
+        return self._read_fresh_frame()
+
+    def live_playlist(self) -> str | None:
+        """An HLS live playlist over the newest completed buffer segments."""
+        segments = self.complete_segments()[-LIVE_WINDOW_SEGMENTS:]
+        if not self.buffer_running or not segments:
+            return None
+        first = SEGMENT_RE.fullmatch(segments[0].name)
+        assert first is not None
+        seconds = self.config.segment_seconds
+        lines = [
+            "#EXTM3U",
+            "#EXT-X-VERSION:3",
+            f"#EXT-X-TARGETDURATION:{seconds}",
+            f"#EXT-X-MEDIA-SEQUENCE:{int(first.group(1))}",
+        ]
+        for segment in segments:
+            lines += [f"#EXTINF:{seconds:.3f},", segment.name]
+        return "\n".join(lines) + "\n"
+
+    def live_segment(self, filename: str) -> Path | None:
+        """A completed buffer segment by bare filename, or None."""
+        if not SEGMENT_RE.fullmatch(filename):
+            return None
+        path = self.config.buffer_dir / filename
+        return path if path in self.complete_segments() else None
 
     def build_replay_command(self, segments: list[Path], output_path: Path) -> list[str]:
         return [

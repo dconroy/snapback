@@ -8,13 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 from .capture import CaptureConfig, CaptureEngine, CaptureError, DeviceBusyError, MediaItem
 from .media import safe_media_path
 
 STATIC_DIR = Path(__file__).parent / "static"
 MEDIA_TYPES = {".jpg": "image/jpeg", ".mp4": "video/mp4"}
+NO_STORE = {"Cache-Control": "no-store"}
 
 
 def media_json(item: MediaItem | None) -> dict[str, Any] | None:
@@ -69,6 +70,27 @@ def create_app(engine: CaptureEngine | None = None, start_buffer: bool | None = 
     @app.post("/api/replay")
     def replay() -> dict[str, Any]:
         return run_capture(engine.save_replay)
+
+    @app.get("/live/frame.jpg")
+    def live_frame() -> Response:
+        data = engine.live_frame()
+        if data is None:
+            raise HTTPException(status_code=503, detail="no live frame from the rolling buffer")
+        return Response(data, media_type="image/jpeg", headers=NO_STORE)
+
+    @app.get("/live/stream.m3u8")
+    def live_playlist() -> Response:
+        playlist = engine.live_playlist()
+        if playlist is None:
+            raise HTTPException(status_code=503, detail="rolling buffer has no footage yet")
+        return Response(playlist, media_type="application/vnd.apple.mpegurl", headers=NO_STORE)
+
+    @app.get("/live/{filename}")
+    def live_segment(filename: str) -> FileResponse:
+        path = engine.live_segment(filename)
+        if path is None:
+            raise HTTPException(status_code=404, detail="not found")
+        return FileResponse(path, media_type="video/mp2t")
 
     @app.get("/media/{filename}")
     def media(filename: str) -> FileResponse:

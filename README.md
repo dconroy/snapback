@@ -7,6 +7,8 @@ Snapback turns a Raspberry Pi 5 with an Elgato Cam Link 4K into a tiny HDMI capt
 1. **Grab Screenshot**: saves a 1920x1080 JPEG of the live HDMI input.
 2. **Download Last 30 Seconds**: saves the previous ~30 seconds (H.264 + AAC MP4).
 
+Above them is a live view of the HDMI input: a near-real-time preview, or tap for live video with sound (a few seconds behind).
+
 No accounts, cloud, telemetry, database, Docker, or JS build tooling. Python + FastAPI + ffmpeg + one HTML file.
 
 > **Disclaimer:** Snapback is a personal home project provided **as-is, without warranty of any kind**. The authors are not liable for lost recordings, data loss, hardware damage, or anything else arising from its use. You are responsible for what you capture, including copyright, terms of service, and recording/consent laws. It has no login, so run it only on a trusted network and never expose it to the internet. Not affiliated with Raspberry Pi, Elgato, or Apple. Read the full [DISCLAIMER.md](DISCLAIMER.md).
@@ -55,6 +57,8 @@ Environment variables, all optional. If you run Snapback as a service, put them 
 - `POST /api/screenshot`: saves a JPEG and returns `{filename, url, size_bytes, ...}`.
 - `POST /api/replay`: saves the last ~30 s and returns `{filename, url, approx_seconds, ...}`.
 - `GET /media/{filename}`: serves a file from the media directory only (strict filename check, no subpaths).
+- `GET /live/frame.jpg`: the buffer's newest frame (refreshed twice a second), for the live preview.
+- `GET /live/stream.m3u8`: an HLS live playlist over the newest buffer segments, for live video with sound (Safari plays it natively). Segments are served from `/live/seg_NNNNNN.ts`.
 
 Errors are JSON `{"detail": "..."}`: `409` if the capture device is busy, `503` if capture failed or the buffer has no footage.
 

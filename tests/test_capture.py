@@ -222,5 +222,46 @@ class RollingBufferTests(unittest.TestCase):
             self.assertEqual(item.path.read_bytes(), JPEG)
 
 
+class LiveViewTests(unittest.TestCase):
+    def test_live_frame_needs_running_buffer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            engine = make_engine(tmpdir)
+            engine.config.buffer_dir.mkdir(parents=True)
+            (engine.config.buffer_dir / "latest.jpg").write_bytes(JPEG)
+            self.assertIsNone(engine.live_frame())
+
+            engine._buffer_process = FakeProcess()
+            self.assertEqual(engine.live_frame(), JPEG)
+
+    def test_live_playlist_lists_newest_completed_segments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            engine = make_engine(tmpdir)
+            write_segments(engine, 10)
+            self.assertIsNone(engine.live_playlist())
+
+            engine._buffer_wanted = True
+            engine._buffer_process = FakeProcess()
+            playlist = engine.live_playlist()
+
+            self.assertIn("#EXT-X-MEDIA-SEQUENCE:3\n", playlist)
+            self.assertIn("#EXT-X-TARGETDURATION:2\n", playlist)
+            names = [line for line in playlist.splitlines() if not line.startswith("#")]
+            self.assertEqual(names, [f"seg_{i:06d}.ts" for i in range(3, 9)])
+            self.assertNotIn("#EXT-X-ENDLIST", playlist)
+
+    def test_live_segment_only_serves_completed_segments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            engine = make_engine(tmpdir)
+            segments = write_segments(engine, 3)
+            engine._buffer_wanted = True
+            engine._buffer_process = FakeProcess()
+
+            self.assertEqual(engine.live_segment("seg_000000.ts"), segments[0])
+            self.assertIsNone(engine.live_segment("seg_000002.ts"), "still being written")
+            for name in ("../seg_000000.ts", "latest.jpg", "seg_0.ts", "ffmpeg-buffer.log"):
+                with self.subTest(name=name):
+                    self.assertIsNone(engine.live_segment(name))
+
+
 if __name__ == "__main__":
     unittest.main()

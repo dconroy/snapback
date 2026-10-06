@@ -66,6 +66,30 @@ class WebTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertIn("detail", response.json())
 
+    def test_live_routes_without_buffer_are_unavailable(self) -> None:
+        self.assertEqual(self.client.get("/live/frame.jpg").status_code, 503)
+        self.assertEqual(self.client.get("/live/stream.m3u8").status_code, 503)
+        for url in ("/live/seg_000000.ts", "/live/latest.jpg", "/live/..%2Fsecret.jpg"):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_live_playlist_and_segments_are_served(self) -> None:
+        buffer_dir = self.engine.config.buffer_dir
+        buffer_dir.mkdir(parents=True)
+        for i in range(3):
+            (buffer_dir / f"seg_{i:06d}.ts").write_bytes(b"ts")
+        self.engine._buffer_wanted = True
+        with patch.object(CaptureEngine, "buffer_running", new=True):
+            playlist = self.client.get("/live/stream.m3u8")
+            segment = self.client.get("/live/seg_000000.ts")
+
+        self.assertEqual(playlist.status_code, 200)
+        self.assertEqual(playlist.headers["content-type"], "application/vnd.apple.mpegurl")
+        self.assertEqual(playlist.headers["cache-control"], "no-store")
+        self.assertIn("seg_000001.ts", playlist.text)
+        self.assertEqual(segment.status_code, 200)
+        self.assertEqual(segment.headers["content-type"], "video/mp2t")
+
     def test_media_route_rejects_paths_outside_media_dir(self) -> None:
         for url in ("/media/..%2Fsecret.jpg", "/media/../secret.jpg", "/media/nope.jpg", "/media/x.txt"):
             with self.subTest(url=url):
