@@ -56,7 +56,8 @@ Scope was narrowed to two actions: Grab Screenshot and Download Last 30 Seconds.
 - Done: static page in `site/` (plain HTML/CSS, CSS phone mockup of the app), deployed by `.github/workflows/pages.yml`.
 - Done: liability disclaimer in `DISCLAIMER.md`, README, the site, and the app footer.
 - Done: Pages source set to GitHub Actions; custom domain `www.snapback.video` set in repo Pages settings (bare domain redirects).
-- Next: add the GitHub Pages DNS records at the registrar (see README "Website"), then tick "Enforce HTTPS" once the certificate is issued.
+- Done: DNS records for GitHub Pages (apex A/AAAA, `www` CNAME) are live.
+- Next: tick "Enforce HTTPS" in repo Pages settings once GitHub has issued the certificate.
 - Next: verify `snapback.video` under GitHub account Settings → Pages (verified domains) to prevent domain takeover.
 - Next: pick an open-source license (e.g. MIT) and add `LICENSE`; none is set yet.
 - Later: replace the CSS mockup with real screenshots once captured on the Pi. `*.png`/`*.jpg` are gitignored, so add an exception for `site/`.
