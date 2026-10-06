@@ -1,4 +1,4 @@
-"""Snapback (QuickCap) local web app: one page, two buttons, a tiny JSON API."""
+"""Snapback local web app: one page, two buttons, a tiny JSON API."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def media_json(item: MediaItem | None) -> dict[str, Any] | None:
 def create_app(engine: CaptureEngine | None = None, start_buffer: bool | None = None) -> FastAPI:
     engine = engine or CaptureEngine(CaptureConfig.from_env())
     if start_buffer is None:
-        start_buffer = os.environ.get("QUICKCAP_START_BUFFER", "1") != "0"
+        start_buffer = os.environ.get("SNAPBACK_START_BUFFER", "1") != "0"
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

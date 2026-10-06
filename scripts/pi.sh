@@ -12,9 +12,9 @@ if [[ -f "$REPO_ROOT/.env" ]]; then
 fi
 
 PI_USER="${ssh_user:-pi}"
-PI_HOST="${ssh_host:-quikcap.local}"
+PI_HOST="${ssh_host:-snapback.local}"
 PI_PORT="${ssh_port:-22}"
-PI_DIR="${remote_dir:-/home/$PI_USER/quickcap}"
+PI_DIR="${remote_dir:-/home/$PI_USER/snapback}"
 PI="$PI_USER@$PI_HOST"
 
 SSH_OPTS=(-p "$PI_PORT" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)

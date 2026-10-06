@@ -9,8 +9,6 @@ Snapback turns a Raspberry Pi 5 with an Elgato Cam Link 4K into a tiny HDMI capt
 
 No accounts, cloud, telemetry, database, Docker, or JS build tooling. Python + FastAPI + ffmpeg + one HTML file.
 
-The project's code name was QuickCap, and the code still uses it: the Python package is `quickcap`, settings are `QUICKCAP_*` variables, and files live in `~/quickcap-runtime`. The GitHub repo is `dconroy/snapback` (renamed from `dconroy/quickcap`).
-
 > **Disclaimer:** Snapback is a personal home project provided **as-is, without warranty of any kind**. The authors are not liable for lost recordings, data loss, hardware damage, or anything else arising from its use. You are responsible for what you capture, including copyright, terms of service, and recording/consent laws. It has no login, so run it only on a trusted network and never expose it to the internet. Not affiliated with Raspberry Pi, Elgato, or Apple. Read the full [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Deploy To The Pi
@@ -22,11 +20,11 @@ cp .env.example .env        # once: SSH user/host (and password, or use SSH keys
 scripts/deploy.sh           # copy code, install deps, restart, print /api/status
 ```
 
-Then open `http://quikcap.local:8080/` on the phone.
+Then open `http://snapback.local:8080/` on the phone.
 
-`deploy.sh` rsyncs the repo to `~/quickcap` on the Pi, leaving out `.git`, `.venv`, `.env`, and `site/`. It then runs `scripts/pi-install.sh` on the Pi, which:
+`deploy.sh` rsyncs the repo to `~/snapback` on the Pi, leaving out `.git`, `.venv`, `.env`, and `site/`. It then runs `scripts/pi-install.sh` on the Pi, which:
 
-1. creates `~/quickcap/.venv` if needed and installs `requirements.txt`;
+1. creates `~/snapback/.venv` if needed and installs `requirements.txt`;
 2. installs the systemd **user** service `snapback.service`, which needs no sudo;
 3. stops the Phase 1 preview server if it is running, since it holds `/dev/video0` and port 8080;
 4. restarts Snapback and prints its status.
@@ -47,17 +45,17 @@ The rolling buffer starts with the app. Give it ~30 seconds before the first rep
 
 ## Configuration
 
-Environment variables, all optional. On the Pi, put them in `~/quickcap-runtime/snapback.env` (`KEY=value` lines) and run `scripts/pi-ctl.sh restart`.
+Environment variables, all optional. On the Pi, put them in `~/snapback-runtime/snapback.env` (`KEY=value` lines) and run `scripts/pi-ctl.sh restart`.
 
 | Variable | Default |
 | --- | --- |
-| `QUICKCAP_RUNTIME_DIR` | `~/quickcap-runtime` |
-| `QUICKCAP_MEDIA_DIR` | `$QUICKCAP_RUNTIME_DIR/captures` |
-| `QUICKCAP_BUFFER_DIR` | `$QUICKCAP_RUNTIME_DIR/buffer` |
-| `QUICKCAP_VIDEO_DEVICE` | `/dev/video0` |
-| `QUICKCAP_AUDIO_DEVICE` | `hw:CARD=C4K,DEV=0` |
-| `QUICKCAP_X264_PRESET` | `ultrafast` |
-| `QUICKCAP_START_BUFFER` | `1` (set `0` to not start the buffer, e.g. for UI work) |
+| `SNAPBACK_RUNTIME_DIR` | `~/snapback-runtime` |
+| `SNAPBACK_MEDIA_DIR` | `$SNAPBACK_RUNTIME_DIR/captures` |
+| `SNAPBACK_BUFFER_DIR` | `$SNAPBACK_RUNTIME_DIR/buffer` |
+| `SNAPBACK_VIDEO_DEVICE` | `/dev/video0` |
+| `SNAPBACK_AUDIO_DEVICE` | `hw:CARD=C4K,DEV=0` |
+| `SNAPBACK_X264_PRESET` | `ultrafast` |
+| `SNAPBACK_START_BUFFER` | `1` (set `0` to not start the buffer, e.g. for UI work) |
 
 Captured media is never stored in the repository and is gitignored.
 
@@ -77,7 +75,7 @@ Errors are JSON `{"detail": "..."}`: `409` if the capture device is busy, `503` 
 uv venv --python 3.13 .venv          # or: python3 -m venv .venv
 uv pip install --python .venv/bin/python -r requirements-dev.txt
 .venv/bin/python -m pytest -q
-QUICKCAP_START_BUFFER=0 .venv/bin/python -m quickcap serve --port 8080   # UI without hardware
+SNAPBACK_START_BUFFER=0 .venv/bin/python -m snapback serve --port 8080   # UI without hardware
 ```
 
 Unit tests mock ffmpeg and need no hardware. Hardware checks are in [docs/manual-verification.md](docs/manual-verification.md).

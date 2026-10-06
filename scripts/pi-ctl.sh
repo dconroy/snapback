@@ -12,7 +12,7 @@ case "${1:-status}" in
     pi_ssh "journalctl --user-unit snapback.service --no-pager -n ${2:-100}"
     ;;
   ffmpeg-log)
-    pi_ssh "tail -n ${2:-50} ~/quickcap-runtime/buffer/ffmpeg-buffer.log"
+    pi_ssh "tail -n ${2:-50} ~/snapback-runtime/buffer/ffmpeg-buffer.log"
     ;;
   start | stop | restart)
     pi_ssh "systemctl --user $1 snapback.service"

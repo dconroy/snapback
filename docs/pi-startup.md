@@ -4,12 +4,12 @@ Snapback runs on the Pi as a systemd **user** service, `snapback.service`, for t
 
 ## How It Is Set Up
 
-- Code: `~/quickcap` (copied by rsync; there is no git checkout on the Pi).
-- Virtualenv: `~/quickcap/.venv`.
+- Code: `~/snapback` (copied by rsync; there is no git checkout on the Pi).
+- Virtualenv: `~/snapback/.venv`.
 - Unit file: `~/.config/systemd/user/snapback.service`, generated from `deploy/snapback.service`.
-- Optional settings: `~/quickcap-runtime/snapback.env` (`QUICKCAP_*=value` lines).
-- Media and buffer: `~/quickcap-runtime/captures`, `~/quickcap-runtime/buffer`.
-- Logs: `journalctl --user-unit snapback.service`; ffmpeg warnings in `~/quickcap-runtime/buffer/ffmpeg-buffer.log`.
+- Optional settings: `~/snapback-runtime/snapback.env` (`SNAPBACK_*=value` lines).
+- Media and buffer: `~/snapback-runtime/captures`, `~/snapback-runtime/buffer`.
+- Logs: `journalctl --user-unit snapback.service`; ffmpeg warnings in `~/snapback-runtime/buffer/ffmpeg-buffer.log`.
 - Port: 8080, the same port the Phase 1 preview server used. They can't run together anyway, since both need `/dev/video0`.
 
 User services keep running after you log out because lingering is enabled for `pi` (`loginctl show-user pi -p Linger` → `yes`). It was already on when Snapback was first deployed. If a reimage turns it off, run `sudo loginctl enable-linger pi`.
@@ -35,7 +35,7 @@ Running by hand for debugging (stop the service first):
 
 ```sh
 systemctl --user stop snapback
-cd ~/quickcap && .venv/bin/python -m quickcap serve
+cd ~/snapback && .venv/bin/python -m snapback serve
 ```
 
 ## Opt In: Start At Boot
@@ -54,9 +54,7 @@ The temporary `@reboot` cron hook that launched the Phase 1 diagnostic preview s
 
 ```sh
 systemctl --user stop snapback
-/home/pi/start_quickcap_preview.sh                 # serves http://quikcap.local:8080/
-pgrep -af '/home/pi/quickcap_preview_server.py'    # is it running?
-tail -f ~/quickcap-runtime/preview.log
+python3 ~/snapback/tools/preview_server.py --port 8080   # http://snapback.local:8080/, Ctrl-C to stop
 ```
 
-`~/quickcap-dev` on the Pi is an older manual copy of the capture engine from Phase 2. It is not used by the service and can be deleted.
+Older bring-up files (the Phase 2 engine copy and the original preview script) were moved to `~/bringup-archive/` on the Pi. Nothing uses them, and they can be deleted.

@@ -7,9 +7,9 @@ After=sound.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/quickcap
-EnvironmentFile=-%h/quickcap-runtime/snapback.env
-ExecStart=%h/quickcap/.venv/bin/python -m quickcap serve --host 0.0.0.0 --port 8080
+WorkingDirectory=%h/snapback
+EnvironmentFile=-%h/snapback-runtime/snapback.env
+ExecStart=%h/snapback/.venv/bin/python -m snapback serve --host 0.0.0.0 --port 8080
 KillSignal=SIGINT
 TimeoutStopSec=15
 Restart=on-failure

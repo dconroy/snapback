@@ -1,8 +1,8 @@
-# QuickCap TODO
+# Snapback TODO
 
 ## Current Guardrails
 
-- Use `quikcap.local` where practical; do not hardcode DHCP-assigned IP addresses.
+- Use `snapback.local` where practical; do not hardcode DHCP-assigned IP addresses.
 - Do not store passwords, credentials, secrets, or captured media in git.
 - Keep the system local-network only: no cloud services, accounts, telemetry, or external database.
 - Keep the implementation simple and Raspberry Pi/Linux native.
@@ -52,7 +52,7 @@ Scope was narrowed to two actions: Grab Screenshot and Download Last 30 Seconds.
 
 ## GitHub Pages Marketing Site
 
-- Done: product renamed to Snapback (code name and Python package stay `quickcap`).
+- Done: project renamed to Snapback everywhere (package, settings, paths, Pi hostname docs).
 - Done: static page in `site/` (plain HTML/CSS, CSS phone mockup of the app), deployed by `.github/workflows/pages.yml`.
 - Done: liability disclaimer in `DISCLAIMER.md`, README, the site, and the app footer.
 - Done: Pages source set to GitHub Actions; custom domain `www.snapback.video` set in repo Pages settings (bare domain redirects).

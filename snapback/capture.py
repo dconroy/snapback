@@ -22,7 +22,7 @@ DEFAULT_AUDIO_DEVICE = "hw:CARD=C4K,DEV=0"
 DEFAULT_VIDEO_SIZE = "1920x1080"
 DEFAULT_FRAMERATE = 60
 DEFAULT_INPUT_FORMAT = "mjpeg"
-DEFAULT_RUNTIME_DIR = "~/quickcap-runtime"
+DEFAULT_RUNTIME_DIR = "~/snapback-runtime"
 
 SEGMENT_TEMPLATE = "seg_%06d.ts"
 SEGMENT_RE = re.compile(r"^seg_(\d{6})\.ts$")
@@ -68,20 +68,20 @@ class CaptureConfig:
 
     @property
     def lock_path(self) -> Path:
-        return self.media_dir.parent / "quickcap-device.lock"
+        return self.media_dir.parent / "snapback-device.lock"
 
     @classmethod
     def from_env(cls) -> "CaptureConfig":
         env = os.environ
-        runtime_dir = Path(env.get("QUICKCAP_RUNTIME_DIR", DEFAULT_RUNTIME_DIR)).expanduser()
-        media_dir = Path(env.get("QUICKCAP_MEDIA_DIR", runtime_dir / "captures")).expanduser()
-        buffer_dir = Path(env.get("QUICKCAP_BUFFER_DIR", runtime_dir / "buffer")).expanduser()
+        runtime_dir = Path(env.get("SNAPBACK_RUNTIME_DIR", DEFAULT_RUNTIME_DIR)).expanduser()
+        media_dir = Path(env.get("SNAPBACK_MEDIA_DIR", runtime_dir / "captures")).expanduser()
+        buffer_dir = Path(env.get("SNAPBACK_BUFFER_DIR", runtime_dir / "buffer")).expanduser()
         return cls(
             media_dir=media_dir,
             buffer_dir=buffer_dir,
-            video_device=env.get("QUICKCAP_VIDEO_DEVICE", DEFAULT_VIDEO_DEVICE),
-            audio_device=env.get("QUICKCAP_AUDIO_DEVICE", DEFAULT_AUDIO_DEVICE),
-            x264_preset=env.get("QUICKCAP_X264_PRESET", "ultrafast"),
+            video_device=env.get("SNAPBACK_VIDEO_DEVICE", DEFAULT_VIDEO_DEVICE),
+            audio_device=env.get("SNAPBACK_AUDIO_DEVICE", DEFAULT_AUDIO_DEVICE),
+            x264_preset=env.get("SNAPBACK_X264_PRESET", "ultrafast"),
         )
 
 
@@ -126,7 +126,7 @@ class CaptureEngine:
 
     Only one ffmpeg process can read /dev/video0 at a time. ``device_owner`` is
     one of None, "buffer", "still", or "recording". A file lock in the runtime
-    directory extends that rule to other QuickCap processes such as the CLI.
+    directory extends that rule to other Snapback processes such as the CLI.
     """
 
     def __init__(self, config: CaptureConfig) -> None:
@@ -163,7 +163,7 @@ class CaptureEngine:
                 fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 lock_file.close()
-                raise DeviceBusyError("capture device is in use by another QuickCap process") from None
+                raise DeviceBusyError("capture device is in use by another Snapback process") from None
             self._device_lock_file = lock_file
             self._owner = owner
 
@@ -421,7 +421,7 @@ class CaptureEngine:
                     self._next_restart_at = time.monotonic() + 5
             if self._supervisor is None or not self._supervisor.is_alive():
                 self._supervisor = threading.Thread(
-                    target=self._supervise, name="quickcap-buffer", daemon=True
+                    target=self._supervise, name="snapback-buffer", daemon=True
                 )
                 self._supervisor.start()
 

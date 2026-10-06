@@ -130,25 +130,7 @@
     .tile .bar::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 2px; background: rgba(255, 255, 255, 0.9); }
     .label { margin: 14px 0 7px 2px; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
     .shot { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
-    .frame {
-      aspect-ratio: 16 / 9;
-      background:
-        radial-gradient(circle at 70% 35%, rgba(255, 214, 102, 0.9) 0 7%, transparent 8%),
-        linear-gradient(180deg, transparent 58%, #1d3b2a 58% 100%),
-        linear-gradient(180deg, #3b6fd8, #8fc1ff 58%);
-      position: relative;
-    }
-    .frame::after {
-      content: "";
-      position: absolute;
-      left: 22%;
-      bottom: 22%;
-      width: 18px;
-      height: 26px;
-      border-radius: 6px 6px 3px 3px;
-      background: #ff453a;
-      box-shadow: 46px 6px 0 -4px #ffd60a;
-    }
+    .frame { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #1d3b2a; }
     .shot .meta { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px; font-size: 10px; }
     .shot .meta span { color: var(--muted); display: block; font-size: 9px; }
     .shot .meta em { font-style: normal; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); font-weight: 600; }
@@ -237,7 +219,7 @@
           </div>
           <div class="label">Latest screenshot</div>
           <div class="shot">
-            <div class="frame"></div>
+            <img class="frame" src="touchdown.jpg" alt="Screenshot of a diving touchdown catch" width="800" height="450">
             <div class="meta"><div>Today, 8:41:07 PM<span>412 KB · JPEG</span></div><em>Save</em></div>
           </div>
         </div>
@@ -337,7 +319,7 @@ git clone https://github.com/dconroy/snapback.git ~/snapback
 cd ~/snapback
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m quickcap serve
+.venv/bin/python -m snapback serve
 
 <span class="c"># on your phone</span>
 open http://&lt;your-pi&gt;.local:8080/</pre>

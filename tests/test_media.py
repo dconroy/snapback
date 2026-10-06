@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from quickcap.media import latest_media, list_media, safe_media_path
+from snapback.media import latest_media, list_media, safe_media_path
 
 
 class SafeMediaPathTests(unittest.TestCase):
@@ -63,8 +63,8 @@ class ListMediaTests(unittest.TestCase):
             self.assertEqual(latest_media(media_dir, "replay"), replay)
 
     def test_missing_dir_is_empty(self) -> None:
-        self.assertEqual(list_media(Path("/nonexistent/quickcap")), [])
-        self.assertIsNone(latest_media(Path("/nonexistent/quickcap"), "replay"))
+        self.assertEqual(list_media(Path("/nonexistent/snapback")), [])
+        self.assertIsNone(latest_media(Path("/nonexistent/snapback"), "replay"))
 
 
 if __name__ == "__main__":

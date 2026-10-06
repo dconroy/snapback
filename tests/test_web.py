@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from quickcap.capture import CaptureConfig, CaptureEngine
-from quickcap.web import create_app
+from snapback.capture import CaptureConfig, CaptureEngine
+from snapback.web import create_app
 
 
 class WebTests(unittest.TestCase):
@@ -48,7 +48,7 @@ class WebTests(unittest.TestCase):
             Path(command[-1]).write_bytes(b"\xff\xd8jpeg\xff\xd9")
             return subprocess.CompletedProcess(command, 0, b"", b"")
 
-        with patch("quickcap.capture.subprocess.run", side_effect=fake_run):
+        with patch("snapback.capture.subprocess.run", side_effect=fake_run):
             response = self.client.post("/api/screenshot")
 
         self.assertEqual(response.status_code, 200)

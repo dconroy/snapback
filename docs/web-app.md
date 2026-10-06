@@ -1,12 +1,12 @@
-# QuickCap Web App
+# Snapback Web App
 
 ## Pieces
 
-- `quickcap/capture.py`: `CaptureEngine`. The only code that starts ffmpeg. Owns the capture device.
-- `quickcap/media.py`: safe filename checks and "latest screenshot/replay" lookup.
-- `quickcap/web.py`: FastAPI routes. Thin; every capture action is one engine call.
-- `quickcap/static/index.html`: the single page (HTML/CSS/vanilla JS). Polls `/api/status` every 3 s.
-- `python -m quickcap serve`: runs uvicorn with exactly one worker.
+- `snapback/capture.py`: `CaptureEngine`. The only code that starts ffmpeg. Owns the capture device.
+- `snapback/media.py`: safe filename checks and "latest screenshot/replay" lookup.
+- `snapback/web.py`: FastAPI routes. Thin; every capture action is one engine call.
+- `snapback/static/index.html`: the single page (HTML/CSS/vanilla JS). Polls `/api/status` every 3 s.
+- `python -m snapback serve`: runs uvicorn with exactly one worker.
 
 ## Capture Device Ownership
 
@@ -17,9 +17,9 @@ Only one process can read `/dev/video0`. `CaptureEngine.device_owner` is always 
 - `"still"`: a one-off still capture (only when the buffer is off or down).
 - `"recording"`: a CLI `record-test`.
 
-Claiming the device also takes a non-blocking `flock` on `~/quickcap-runtime/quickcap-device.lock`, so the web app and the CLI cannot both grab the device. Anything that tries while the device is owned gets `DeviceBusyError` (HTTP 409).
+Claiming the device also takes a non-blocking `flock` on `~/snapback-runtime/snapback-device.lock`, so the web app and the CLI cannot both grab the device. Anything that tries while the device is owned gets `DeviceBusyError` (HTTP 409).
 
-The Phase 1 preview server (`tools/quickcap_preview_server.py`) does not know about this lock. Stop it before running QuickCap.
+The Phase 1 preview server (`tools/preview_server.py`) does not know about this lock. Stop it before running Snapback.
 
 ## Rolling Buffer
 
@@ -48,11 +48,11 @@ What this means in practice:
 ### Screenshot behaviour
 
 - Buffer running: copies `buffer/latest.jpg` (at most ~0.5 s old) into the media folder. No second reader on the device.
-- Buffer not running: runs a one-shot ffmpeg still capture (same command as `python -m quickcap photo`).
+- Buffer not running: runs a one-shot ffmpeg still capture (same command as `python -m snapback photo`).
 
 ## Media Files
 
-Saved to `~/quickcap-runtime/captures` as `YYYYMMDDTHHMMSSZ-{screenshot|replay}-{id8}.{jpg|mp4}`. Files are written as `.part` first and renamed when complete, so half-written files are never listed or served.
+Saved to `~/snapback-runtime/captures` as `YYYYMMDDTHHMMSSZ-{screenshot|replay}-{id8}.{jpg|mp4}`. Files are written as `.part` first and renamed when complete, so half-written files are never listed or served.
 
 `GET /media/{filename}` only serves names matching `^[A-Za-z0-9][A-Za-z0-9_-]*\.(jpg|mp4)$` that resolve to a regular file directly inside the media directory (symlinks out are refused). Nothing from HTTP input reaches ffmpeg arguments or filesystem paths.
 
@@ -65,7 +65,7 @@ Software H.264 at 1080p60 on a Pi 5 is the heaviest part. `ultrafast` is the def
 If `docs/manual-verification.md` shows the buffer falling behind, drop to 30 fps (the Cam Link supports 1080p30 MJPEG):
 
 ```sh
-.venv/bin/python -m quickcap --framerate 30 serve
+.venv/bin/python -m snapback --framerate 30 serve
 ```
 
-If it keeps up with headroom, try `QUICKCAP_X264_PRESET=superfast` for smaller files.
+If it keeps up with headroom, try `SNAPBACK_X264_PRESET=superfast` for smaller files.

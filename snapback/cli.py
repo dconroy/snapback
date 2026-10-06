@@ -9,7 +9,7 @@ from .capture import CaptureConfig, CaptureEngine
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="QuickCap capture utility")
+    parser = argparse.ArgumentParser(description="Snapback capture utility")
     parser.add_argument("--media-dir", help="Directory for captured media")
     parser.add_argument("--video-device", default=None)
     parser.add_argument("--audio-device", default=None)
@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         "replay-test", help="Run the rolling buffer for a while, then save a replay clip"
     )
     replay_parser.add_argument("--seconds", type=float, default=40.0)
-    serve_parser = subparsers.add_parser("serve", help="Run the QuickCap web app")
+    serve_parser = subparsers.add_parser("serve", help="Run the Snapback web app")
     serve_parser.add_argument("--host", default="0.0.0.0")
     serve_parser.add_argument("--port", type=int, default=8080)
     return parser

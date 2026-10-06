@@ -11,16 +11,16 @@ fi
 .venv/bin/pip install --quiet --disable-pip-version-check -r requirements.txt
 
 unit_dir="$HOME/.config/systemd/user"
-mkdir -p "$unit_dir" "$HOME/quickcap-runtime"
-sed -e "s#%h/quickcap/#$APP_DIR/#g" \
-    -e "s#^WorkingDirectory=%h/quickcap\$#WorkingDirectory=$APP_DIR#" \
+mkdir -p "$unit_dir" "$HOME/snapback-runtime"
+sed -e "s#%h/snapback/#$APP_DIR/#g" \
+    -e "s#^WorkingDirectory=%h/snapback\$#WorkingDirectory=$APP_DIR#" \
     deploy/snapback.service > "$unit_dir/snapback.service"
 systemctl --user daemon-reload
 
 # The Phase 1 preview server holds /dev/video0 and port 8080.
-if pgrep -f quickcap_preview_server.py > /dev/null; then
+if pgrep -f preview_server.py > /dev/null; then
   echo "Stopping the Phase 1 preview server"
-  pkill -INT -f quickcap_preview_server.py || true
+  pkill -INT -f preview_server.py || true
   sleep 2
 fi
 

@@ -23,8 +23,8 @@ htmlcov/
 id_rsa
 id_ed25519
 
-# QuickCap local media/output
-quickcap-runtime/
+# Snapback local media/output
+snapback-runtime/
 captures/
 recordings/
 buffer/

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from quickcap.capture import CaptureConfig, CaptureEngine, CaptureError, DeviceBusyError
+from snapback.capture import CaptureConfig, CaptureEngine, CaptureError, DeviceBusyError
 
 JPEG = b"\xff\xd8fake-jpeg\xff\xd9"
 
@@ -54,7 +54,7 @@ class CaptureEngineTests(unittest.TestCase):
                 Path(command[-1]).write_bytes(b"jpeg")
                 return subprocess.CompletedProcess(command, 0, b"", b"")
 
-            with patch("quickcap.capture.subprocess.run", side_effect=fake_run) as run:
+            with patch("snapback.capture.subprocess.run", side_effect=fake_run) as run:
                 item = engine.take_photo()
 
             command = run.call_args.args[0]
@@ -70,7 +70,7 @@ class CaptureEngineTests(unittest.TestCase):
             engine = CaptureEngine(CaptureConfig(media_dir=Path(tmpdir)))
             failed = subprocess.CompletedProcess(["ffmpeg"], 1, b"", b"bad input")
 
-            with patch("quickcap.capture.subprocess.run", return_value=failed):
+            with patch("snapback.capture.subprocess.run", return_value=failed):
                 with self.assertRaises(CaptureError):
                     engine.take_photo()
             self.assertIsNone(engine.device_owner)
@@ -82,7 +82,7 @@ class CaptureEngineTests(unittest.TestCase):
             def fake_run(command, **kwargs):
                 raise FileNotFoundError(command[0])
 
-            with patch("quickcap.capture.subprocess.run", side_effect=fake_run):
+            with patch("snapback.capture.subprocess.run", side_effect=fake_run):
                 status = engine.get_status()
 
             self.assertEqual(status["v4l2_returncode"], 127)
@@ -91,7 +91,7 @@ class CaptureEngineTests(unittest.TestCase):
 
 class ConfigTests(unittest.TestCase):
     def test_defaults_live_under_runtime_dir(self) -> None:
-        with patch.dict("os.environ", {"QUICKCAP_RUNTIME_DIR": "/tmp/qc-runtime"}, clear=True):
+        with patch.dict("os.environ", {"SNAPBACK_RUNTIME_DIR": "/tmp/qc-runtime"}, clear=True):
             config = CaptureConfig.from_env()
         self.assertEqual(config.media_dir, Path("/tmp/qc-runtime/captures"))
         self.assertEqual(config.buffer_dir, Path("/tmp/qc-runtime/buffer"))
@@ -134,7 +134,7 @@ class RollingBufferTests(unittest.TestCase):
     def test_start_buffer_claims_device_and_blocks_direct_capture(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             engine = make_engine(tmpdir)
-            with patch("quickcap.capture.subprocess.Popen", FakeProcess):
+            with patch("snapback.capture.subprocess.Popen", FakeProcess):
                 engine.start_buffer()
                 try:
                     self.assertTrue(engine.buffer_running)
@@ -190,7 +190,7 @@ class RollingBufferTests(unittest.TestCase):
                 Path(command[-1]).write_bytes(b"mp4")
                 return subprocess.CompletedProcess(command, 0, b"", b"")
 
-            with patch("quickcap.capture.subprocess.run", side_effect=fake_run) as run:
+            with patch("snapback.capture.subprocess.run", side_effect=fake_run) as run:
                 item = engine.save_replay()
 
             command = run.call_args.args[0]
@@ -214,7 +214,7 @@ class RollingBufferTests(unittest.TestCase):
             (engine.config.buffer_dir / "latest.jpg").write_bytes(JPEG)
             engine._buffer_process = FakeProcess()
 
-            with patch("quickcap.capture.subprocess.run") as run:
+            with patch("snapback.capture.subprocess.run") as run:
                 item = engine.take_screenshot()
 
             run.assert_not_called()

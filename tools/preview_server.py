@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Tiny QuickCap diagnostic preview server.
+"""Tiny Snapback diagnostic preview server.
 
 This is intentionally simple: it uses only Python's standard library and
-ffmpeg. It is for bring-up, not the final QuickCap API/UI.
+ffmpeg. It is for bring-up, not the final Snapback API/UI.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QuickCap Preview</title>
+  <title>Snapback Preview</title>
   <style>
     :root {
       color-scheme: dark;
@@ -113,7 +113,7 @@ HTML = """<!doctype html>
 </head>
 <body>
   <header>
-    <h1>QuickCap Preview</h1>
+    <h1>Snapback Preview</h1>
     <code id="state">loading</code>
   </header>
   <main>
@@ -239,7 +239,7 @@ def make_handler(args: argparse.Namespace):
     state = PreviewState()
 
     class Handler(BaseHTTPRequestHandler):
-        server_version = "QuickCapPreview/0.1"
+        server_version = "SnapbackPreview/0.1"
 
         def log_message(self, fmt: str, *values: Any) -> None:
             sys.stderr.write(
@@ -352,13 +352,13 @@ def make_handler(args: argparse.Namespace):
                 self.send_response(HTTPStatus.OK)
                 self.send_header(
                     "Content-Type",
-                    "multipart/x-mixed-replace; boundary=quickcap",
+                    "multipart/x-mixed-replace; boundary=snapback",
                 )
                 self.send_header("Cache-Control", "no-store")
                 self.end_headers()
                 for frame in iter_jpegs(process.stdout):
                     state.set_frame(frame)
-                    self.wfile.write(b"--quickcap\r\n")
+                    self.wfile.write(b"--snapback\r\n")
                     self.wfile.write(b"Content-Type: image/jpeg\r\n")
                     self.wfile.write(f"Content-Length: {len(frame)}\r\n\r\n".encode())
                     self.wfile.write(frame)
@@ -394,7 +394,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     server = ThreadingHTTPServer((args.host, args.port), make_handler(args))
-    print(f"QuickCap preview listening on http://{args.host}:{args.port}", flush=True)
+    print(f"Snapback preview listening on http://{args.host}:{args.port}", flush=True)
     print(
         f"Device {args.device} as {args.video_size}@{args.framerate} {args.input_format}",
         flush=True,

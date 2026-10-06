@@ -1,6 +1,6 @@
 # Capture Engine
 
-The first QuickCap runtime layer is `quickcap.capture.CaptureEngine`.
+The first Snapback runtime layer is `snapback.capture.CaptureEngine`.
 
 Its job is to keep hardware and ffmpeg interaction in one place so the future HTTP API can stay small and safe.
 
@@ -18,11 +18,11 @@ Command construction is split into `build_still_command`, `build_buffer_command`
 
 ## Hardware Test Result
 
-Tested on `quikcap.local` on 2026-10-06:
+Tested on `snapback.local` on 2026-10-06:
 
-- `python3 -m quickcap status` detected `/dev/video0`, `hw:CARD=C4K,DEV=0`, ffmpeg, V4L2, and ALSA capture.
-- `python3 -m quickcap photo` created a 1920x1080 JPEG in `/home/pi/quickcap-runtime/captures`.
-- `python3 -m quickcap record-test --seconds 3` created a 3 second MP4.
+- `python3 -m snapback status` detected `/dev/video0`, `hw:CARD=C4K,DEV=0`, ffmpeg, V4L2, and ALSA capture.
+- `python3 -m snapback photo` created a 1920x1080 JPEG in `/home/pi/snapback-runtime/captures`.
+- `python3 -m snapback record-test --seconds 3` created a 3 second MP4.
 - `ffprobe` reported the MP4 as H.264 video at 1920x1080/60 fps with AAC stereo audio at 48 kHz.
 
 The diagnostic preview server must be stopped before running photo or recording commands because `/dev/video0` can only be read by one capture process at a time.
@@ -42,11 +42,11 @@ These defaults match the Phase 1 bring-up result for the Elgato Cam Link 4K.
 Run locally on the Pi from the repository root:
 
 ```sh
-python3 -m quickcap status
-python3 -m quickcap photo
-python3 -m quickcap record-test --seconds 3
-python3 -m quickcap replay-test --seconds 40   # buffer for 40 s, then screenshot + replay
-python3 -m quickcap serve                      # the web app (needs requirements.txt installed)
+python3 -m snapback status
+python3 -m snapback photo
+python3 -m snapback record-test --seconds 3
+python3 -m snapback replay-test --seconds 40   # buffer for 40 s, then screenshot + replay
+python3 -m snapback serve                      # the web app (needs requirements.txt installed)
 ```
 
 These fail with "capture device is in use" while the web app is running.
@@ -54,7 +54,7 @@ These fail with "capture device is in use" while the web app is running.
 To override the media directory:
 
 ```sh
-QUICKCAP_MEDIA_DIR=~/quickcap-runtime/captures python3 -m quickcap photo
+SNAPBACK_MEDIA_DIR=~/snapback-runtime/captures python3 -m snapback photo
 ```
 
-The CLI is a development utility. The FastAPI app (`quickcap/web.py`) calls `CaptureEngine` directly.
+The CLI is a development utility. The FastAPI app (`snapback/web.py`) calls `CaptureEngine` directly.
