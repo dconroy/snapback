@@ -22,7 +22,7 @@ The marketing page (`site/index.html`, published to www.snapback.video) must des
 
 ## Pi Safety
 
-- Do not run `sudo` on the Pi. Give the user the command to run themselves.
+- `sudo` on the Pi is allowed. Feed the password from `.env` over stdin (`printf '%s\n' "$ssh_password" | pi_ssh "sudo -S -p '' ..."`) so it never appears in a command line or output. Tell the user what you changed.
 - Do not delete files on the Pi; move old things to `~/bringup-archive/` instead.
 - Captured media lives in `~/snapback-runtime/captures` on the Pi. Never delete it, and never commit media to git.
 - Never commit or print the contents of `.env`.
