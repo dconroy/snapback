@@ -7,8 +7,7 @@ The Raspberry Pi (`snapback.local`, SSH details in the gitignored `.env`) is the
 - After changing code, deploy it: `scripts/deploy.sh`. It rsyncs the repo to `~/snapback` on the Pi, installs requirements, restarts `snapback.service`, and prints `/api/status`.
 - The Pi has no git checkout. Never edit files directly on the Pi; edit here and deploy, or the next deploy will overwrite the edits.
 - Check the result after deploying: `scripts/pi-ctl.sh status`, `scripts/pi-ctl.sh logs`, `scripts/pi-ctl.sh ffmpeg-log`.
-- Docs-only or `site/` changes don't need a deploy (`site/` is not copied to the Pi; it is published by GitHub Pages).
-- Run `.venv/bin/python -m pytest -q` locally before deploying.
+- `site/` is not copied to the Pi; it is published by GitHub Pages.
 - The scripts in `scripts/` are bash. If you source `scripts/pi.sh` for an ad-hoc command, do it inside `bash -c '...'`; from zsh it can't find `.env` and silently falls back to defaults.
 
 ## Keep The Marketing Site Current
@@ -20,9 +19,15 @@ The marketing page (`site/index.html`, published to www.snapback.video) must des
 - Don't advertise anything that isn't built and deployed yet.
 - Images in `site/` must not contain real team, league, or brand logos (see the "Not affiliated" fine print).
 
-## Git
+## Finish Every Change: Test, Commit, Push, Deploy
 
-Agents may commit and push to `main` in this repo without asking. Run the tests first, write a clear commit message, and never commit `.env` or captured media. Pushes that touch `site/` publish the marketing site.
+The user wants `main` and the Pi to always have the latest code. Whenever you finish a code update, without asking:
+
+1. Run `.venv/bin/python -m pytest -q`; fix failures before going further.
+2. Commit with a clear message and push to `main`.
+3. Run `scripts/deploy.sh` and check that the service came back up.
+
+Never commit `.env` or captured media. Pushes that touch `site/` publish the marketing site.
 
 ## Pi Safety
 
