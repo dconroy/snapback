@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snapback · Instant replay for anything with HDMI</title>
+  <meta name="description" content="Snapback is a tiny Raspberry Pi box that always remembers the last 30 seconds of any HDMI source. Tap a button on your phone to save a screenshot or the clip. Local network only.">
+  <meta property="og:title" content="Snapback · Instant replay for anything with HDMI">
+  <meta property="og:description" content="A Raspberry Pi 5 + Cam Link box that saves the last 30 seconds, or a screenshot, from your phone. No cloud, no accounts.">
+  <meta name="theme-color" content="#0b0c0e">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0c0e;
+      --surface: #14161a;
+      --surface-2: #1c1f24;
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #f4f5f7;
+      --muted: #969ca6;
+      --red: #ff453a;
+      --green: #30d158;
+      --max: 1080px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.55; }
+    a { color: inherit; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 22px; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(11, 12, 14, 0.8);
+      backdrop-filter: saturate(160%) blur(14px);
+      -webkit-backdrop-filter: saturate(160%) blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; text-decoration: none; }
+    .logo img { width: 28px; height: 28px; }
+    nav ul { display: flex; gap: 22px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+    nav ul a { color: var(--muted); text-decoration: none; }
+    nav ul a:hover { color: var(--text); }
+    @media (max-width: 640px) { nav ul li:not(:last-child) { display: none; } }
+
+    .hero { position: relative; overflow: hidden; padding: 84px 0 72px; }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: -40% -10% auto auto;
+      width: 720px;
+      height: 720px;
+      background: radial-gradient(closest-side, rgba(255, 69, 58, 0.22), transparent);
+      pointer-events: none;
+    }
+    .hero .wrap { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
+    @media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; } .phone { margin: 0 auto; } }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 4px rgba(255, 69, 58, 0.2); }
+    h1 { margin: 20px 0 18px; font-size: clamp(40px, 6.4vw, 68px); line-height: 1.02; letter-spacing: -0.04em; }
+    h1 em { font-style: normal; color: var(--red); }
+    .lede { max-width: 34em; margin: 0 0 30px; font-size: 19px; color: var(--muted); }
+    .ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-weight: 650;
+      font-size: 15px;
+      text-decoration: none;
+    }
+    .btn.primary { background: var(--text); color: #111; }
+    .btn.ghost { border: 1px solid var(--line); background: var(--surface); }
+
+    /* Phone mockup of the actual app UI */
+    .phone {
+      width: 300px;
+      padding: 12px;
+      border-radius: 46px;
+      background: linear-gradient(160deg, #2a2d33, #121317);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+    .screen { position: relative; border-radius: 36px; background: var(--bg); padding: 44px 14px 18px; overflow: hidden; }
+    .screen::before {
+      content: "";
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      width: 88px;
+      height: 24px;
+      transform: translateX(-50%);
+      border-radius: 14px;
+      background: #000;
+    }
+    .app-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .app-head b { font-size: 16px; letter-spacing: -0.02em; }
+    .live { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 10px; font-weight: 600; }
+    .live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .tile { position: relative; display: flex; align-items: center; gap: 11px; padding: 14px; border-radius: 14px; margin-bottom: 9px; }
+    .tile .ic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; flex: none; }
+    .tile svg { width: 18px; height: 18px; }
+    .tile b { display: block; font-size: 13px; }
+    .tile small { display: block; font-size: 10px; opacity: 0.7; }
+    .tile.white { background: var(--text); color: #111; }
+    .tile.white .ic { background: rgba(0, 0, 0, 0.07); }
+    .tile.red { background: var(--red); color: #fff; padding-bottom: 20px; }
+    .tile.red .ic { background: rgba(255, 255, 255, 0.18); }
+    .tile .bar { position: absolute; left: 14px; right: 14px; bottom: 8px; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, 0.2); }
+    .tile .bar::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 2px; background: rgba(255, 255, 255, 0.9); }
+    .label { margin: 14px 0 7px 2px; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .shot { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+    .frame {
+      aspect-ratio: 16 / 9;
+      background:
+        radial-gradient(circle at 70% 35%, rgba(255, 214, 102, 0.9) 0 7%, transparent 8%),
+        linear-gradient(180deg, transparent 58%, #1d3b2a 58% 100%),
+        linear-gradient(180deg, #3b6fd8, #8fc1ff 58%);
+      position: relative;
+    }
+    .frame::after {
+      content: "";
+      position: absolute;
+      left: 22%;
+      bottom: 22%;
+      width: 18px;
+      height: 26px;
+      border-radius: 6px 6px 3px 3px;
+      background: #ff453a;
+      box-shadow: 46px 6px 0 -4px #ffd60a;
+    }
+    .shot .meta { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px; font-size: 10px; }
+    .shot .meta span { color: var(--muted); display: block; font-size: 9px; }
+    .shot .meta em { font-style: normal; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); font-weight: 600; }
+
+    section { padding: 80px 0; border-top: 1px solid var(--line); }
+    h2 { margin: 0 0 12px; font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.03em; line-height: 1.1; }
+    .section-lede { margin: 0 0 40px; max-width: 40em; color: var(--muted); font-size: 17px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .card { padding: 24px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+    .card h3 { margin: 14px 0 6px; font-size: 17px; letter-spacing: -0.01em; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+    .num { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--surface-2); font-weight: 700; font-size: 15px; }
+    .feat-ic { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: rgba(255, 69, 58, 0.12); color: var(--red); }
+    .feat-ic svg { width: 20px; height: 20px; }
+
+    .hw { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+    @media (max-width: 860px) { .hw { grid-template-columns: 1fr; } }
+    .parts { margin: 0; padding: 0; list-style: none; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); overflow: hidden; }
+    .parts li { display: flex; justify-content: space-between; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .parts li:last-child { border-bottom: 0; }
+    .parts span { color: var(--muted); font-size: 14px; text-align: right; }
+    .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 26px; font-size: 14px; font-weight: 600; }
+    .chain b { padding: 9px 13px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; }
+    .chain i { color: var(--muted); font-style: normal; }
+
+    pre {
+      margin: 0;
+      padding: 22px;
+      border-radius: 18px;
+      background: #07080a;
+      border: 1px solid var(--line);
+      overflow-x: auto;
+      font: 14px/1.7 ui-monospace, "SF Mono", Menlo, monospace;
+      color: #d7dbe0;
+    }
+    pre .c { color: #6b727c; }
+
+    .fine { color: var(--muted); font-size: 14px; }
+    .fine h2 { font-size: 24px; color: var(--text); }
+    .fine-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 40px; }
+    @media (max-width: 860px) { .fine-grid { grid-template-columns: 1fr; } }
+    .fine h4 { margin: 0 0 4px; color: var(--text); font-size: 14px; }
+    .fine p { margin: 0; }
+
+    footer { padding: 34px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="logo" href="#"><img src="favicon.svg" alt="">Snapback</a>
+      <ul>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#hardware">Hardware</a></li>
+        <li><a href="#setup">Setup</a></li>
+        <li><a href="https://github.com/dconroy/snapback">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Always remembering the last 30 seconds</span>
+        <h1>Instant replay for <em>anything</em> with HDMI.</h1>
+        <p class="lede">Snapback is a tiny Raspberry Pi box that quietly buffers whatever's on your HDMI source. Something great happens? Tap one button on your phone and keep the last 30 seconds, or grab a full-res screenshot.</p>
+        <div class="ctas">
+          <a class="btn primary" href="#setup">Build one</a>
+          <a class="btn ghost" href="https://github.com/dconroy/snapback">View source</a>
+        </div>
+      </div>
+
+      <div class="phone" aria-label="Snapback app on an iPhone">
+        <div class="screen">
+          <div class="app-head"><b>Snapback</b><span class="live"><i></i>Live</span></div>
+          <div class="tile white">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+            <span><b>Grab Screenshot</b><small>Saves a full-size JPEG</small></span>
+          </div>
+          <div class="tile red">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></span>
+            <span><b>Download Last 30 Seconds</b><small>Ready · saves an MP4 with audio</small></span>
+            <span class="bar"></span>
+          </div>
+          <div class="label">Latest screenshot</div>
+          <div class="shot">
+            <div class="frame"></div>
+            <div class="meta"><div>Today, 8:41:07 PM<span>412 KB · JPEG</span></div><em>Save</em></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>Two buttons. That's the whole app.</h2>
+      <p class="section-lede">No accounts, no settings screens, no app to install. Open a web page on your phone and tap.</p>
+      <div class="grid">
+        <div class="card">
+          <span class="num">1</span>
+          <h3>Plug it in</h3>
+          <p>HDMI from your console, camera, or computer goes into a Cam Link on a Raspberry Pi 5.</p>
+        </div>
+        <div class="card">
+          <span class="num">2</span>
+          <h3>It keeps rolling</h3>
+          <p>Snapback encodes a continuous H.264 buffer and keeps about the last minute on the Pi.</p>
+        </div>
+        <div class="card">
+          <span class="num">3</span>
+          <h3>Tap to keep it</h3>
+          <p>Open the Pi's web page on your iPhone. Save a screenshot or the last 30 seconds, straight to Files or Photos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Small on purpose.</h2>
+      <p class="section-lede">A home project that does one job well and stays out of the way.</p>
+      <div class="grid">
+        <div class="card">
+          <span class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></span>
+          <h3>Rolling 30-second buffer</h3>
+          <p>Saved clips are stitched without re-encoding, so they're ready in about a second.</p>
+        </div>
+        <div class="card">
+          <span class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg></span>
+          <h3>1080p60 in, full-res out</h3>
+          <p>Screenshots are full 1920x1080 JPEGs. Clips are H.264 + AAC MP4s that play anywhere.</p>
+        </div>
+        <div class="card">
+          <span class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
+          <h3>Made for your phone</h3>
+          <p>A single mobile web page with big, thumb-sized buttons, built for Safari on iPhone.</p>
+        </div>
+        <div class="card">
+          <span class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/></svg></span>
+          <h3>Local network only</h3>
+          <p>Your captures live on the Pi. No cloud, no telemetry, no accounts, nothing phoning home.</p>
+        </div>
+        <div class="card">
+          <span class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13.5 6l-3 12"/></svg></span>
+          <h3>Easy to hack on</h3>
+          <p>Python, FastAPI, ffmpeg, and one HTML file. No Docker, no database, no JS build step.</p>
+        </div>
+        <div class="card">
+          <span class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <h3>Recovers on its own</h3>
+          <p>Unplug the HDMI or reset the capture card and the buffer restarts by itself.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hardware">
+    <div class="wrap hw">
+      <div>
+        <h2>What you need</h2>
+        <p class="section-lede">Off-the-shelf parts, no soldering, no GPIO.</p>
+        <div class="chain">
+          <b>HDMI source</b><i>→</i><b>Cam Link 4K</b><i>→ USB →</i><b>Raspberry Pi 5</b><i>→ Wi-Fi →</i><b>iPhone</b>
+        </div>
+      </div>
+      <ul class="parts">
+        <li>Raspberry Pi 5 <span>4 GB is plenty</span></li>
+        <li>Elgato Cam Link 4K <span>USB HDMI capture</span></li>
+        <li>microSD card <span>32 GB+, a good one</span></li>
+        <li>Official Pi 5 power supply <span>27 W USB-C</span></li>
+        <li>HDMI splitter <span>Optional: keep watching on a TV</span></li>
+        <li>Active cooler <span>Recommended: encoding runs nonstop</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="wrap">
+      <h2>Set it up in a few minutes</h2>
+      <p class="section-lede">On Raspberry Pi OS with <code>ffmpeg</code> and Python 3 installed. Full notes are in the <a href="https://github.com/dconroy/snapback#readme">README</a>.</p>
+<pre><span class="c"># on the Pi</span>
+git clone https://github.com/dconroy/snapback.git ~/snapback
+cd ~/snapback
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m quickcap serve
+
+<span class="c"># on your phone</span>
+open http://&lt;your-pi&gt;.local:8000/</pre>
+    </div>
+  </section>
+
+  <section class="fine" id="disclaimer">
+    <div class="wrap">
+      <h2>The fine print</h2>
+      <p style="margin-bottom: 26px;">Snapback is an early-stage personal home project. Read the full <a href="https://github.com/dconroy/snapback/blob/main/DISCLAIMER.md">disclaimer</a> before using it.</p>
+      <div class="fine-grid">
+        <div>
+          <h4>Provided as-is</h4>
+          <p>No warranty of any kind. Clips may be missing, late, or corrupted. The authors are not liable for any damages, data loss, or hardware damage from using it.</p>
+        </div>
+        <div>
+          <h4>You're responsible for what you capture</h4>
+          <p>Respect copyright, terms of service, and audio/video recording and consent laws where you live. Snapback is not intended to bypass HDCP or other copy protection.</p>
+        </div>
+        <div>
+          <h4>No login, so trusted networks only</h4>
+          <p>Anyone on your network can open it. Never expose it to the internet.</p>
+        </div>
+        <div>
+          <h4>Not affiliated</h4>
+          <p>Not affiliated with or endorsed by Raspberry Pi Ltd, Elgato/Corsair, Apple, or FFmpeg. Trademarks belong to their owners.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>Snapback · a home project · provided as-is, without warranty</span>
+      <a href="https://github.com/dconroy/snapback">github.com/dconroy/snapback</a>
+    </div>
+  </footer>
+</body>
+</html>

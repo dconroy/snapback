@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0c0e">
+  <title>Snapback</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0c0e;
+      --surface: #16181c;
+      --surface-2: #1f2228;
+      --line: rgba(255, 255, 255, 0.07);
+      --text: #f4f5f7;
+      --muted: #8b919b;
+      --green: #30d158;
+      --amber: #ffb340;
+      --red: #ff453a;
+      --radius: 18px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0 auto;
+      max-width: 520px;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .brand { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .pill.ok .dot { background: var(--green); box-shadow: 0 0 0 4px rgba(48, 209, 88, 0.18); }
+    .pill.warn .dot { background: var(--amber); }
+    .pill.bad .dot { background: var(--red); }
+    #error {
+      display: none;
+      margin: -10px 0 18px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 69, 58, 0.1);
+      color: #ff9f97;
+      font-size: 13px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .actions { display: grid; gap: 12px; margin-bottom: 26px; }
+    .action {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      min-height: 104px;
+      padding: 20px;
+      border: 0;
+      border-radius: var(--radius);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, filter 0.12s ease, opacity 0.2s;
+    }
+    .action:active { transform: scale(0.98); }
+    .action:disabled { cursor: default; opacity: 0.6; }
+    .action .icon {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+    }
+    .action svg { width: 26px; height: 26px; }
+    .action .label { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+    .action .sub { display: block; margin-top: 3px; font-size: 14px; opacity: 0.7; }
+    #shot { background: var(--text); color: #111; }
+    #shot .icon { background: rgba(0, 0, 0, 0.07); }
+    #replay { background: var(--red); color: #fff; }
+    #replay .icon { background: rgba(255, 255, 255, 0.18); }
+    .track {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 12px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .meter {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: rgba(255, 255, 255, 0.9);
+      transition: width 0.6s ease;
+    }
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    h2 {
+      margin: 0 0 10px 4px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .media {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #000;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+    .meta { min-width: 0; }
+    .meta strong { display: block; font-size: 15px; font-weight: 600; }
+    .meta span { display: block; font-size: 13px; color: var(--muted); }
+    .open {
+      flex: none;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .empty {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 16 / 9;
+      color: var(--muted);
+      font-size: 14px;
+      background: repeating-linear-gradient(135deg, var(--surface), var(--surface) 10px, #181a1f 10px, #181a1f 20px);
+    }
+
+    footer { margin-top: 20px; text-align: center; font-size: 12px; line-height: 1.6; color: var(--muted); }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(22px, env(safe-area-inset-bottom));
+      transform: translate(-50%, 20px);
+      max-width: calc(100% - 36px);
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: #2a2d34;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+    #toast.bad { background: #4a1f1c; color: #ffd2ce; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Snapback</div>
+    <div id="pill" class="pill"><span class="dot"></span><span id="pill-text">Connecting…</span></div>
+  </header>
+  <div id="error"></div>
+
+  <div class="actions">
+    <button id="shot" class="action" type="button">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </span>
+      <span><span class="label">Grab Screenshot</span><span class="sub">Saves a full-size JPEG</span></span>
+    </button>
+    <button id="replay" class="action" type="button">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>
+      </span>
+      <span><span class="label">Download Last 30 Seconds</span><span class="sub" id="replay-sub">Saves an MP4 with audio</span></span>
+      <span class="track"><span class="meter" id="meter"></span></span>
+    </button>
+  </div>
+
+  <h2>Latest screenshot</h2>
+  <div class="card" id="latest-shot"><div class="empty">No screenshot yet</div></div>
+
+  <h2>Latest clip</h2>
+  <div class="card" id="latest-replay"><div class="empty">No clip yet</div></div>
+
+  <footer><span id="footer"></span><br>Home project, provided as-is without warranty. You're responsible for what you capture.</footer>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let shownShot = null;
+    let shownReplay = null;
+    let toastTimer = null;
+
+    function when(iso) {
+      const d = new Date(iso);
+      const sameDay = d.toDateString() === new Date().toDateString();
+      const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+      return sameDay ? "Today, " + time : d.toLocaleDateString([], { month: "short", day: "numeric" }) + ", " + time;
+    }
+
+    function mb(bytes) {
+      return bytes >= 1e6 ? (bytes / 1e6).toFixed(0) + " MB" : (bytes / 1e3).toFixed(0) + " KB";
+    }
+
+    function toast(text, bad) {
+      const el = $("toast");
+      el.textContent = text;
+      el.className = "show" + (bad ? " bad" : "");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => (el.className = bad ? "bad" : ""), bad ? 5000 : 2500);
+    }
+
+    function row(title, detail, item, linkText) {
+      const r = document.createElement("div");
+      r.className = "row";
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const strong = document.createElement("strong");
+      strong.textContent = title;
+      const span = document.createElement("span");
+      span.textContent = detail;
+      meta.append(strong, span);
+      const a = document.createElement("a");
+      a.className = "open";
+      a.href = item.url;
+      a.download = item.filename;
+      a.textContent = linkText;
+      r.append(meta, a);
+      return r;
+    }
+
+    function renderShot(item) {
+      if (!item || item.filename === shownShot) return;
+      shownShot = item.filename;
+      const img = document.createElement("img");
+      img.className = "media";
+      img.src = item.url;
+      img.alt = "Latest screenshot";
+      const link = document.createElement("a");
+      link.href = item.url;
+      link.append(img);
+      $("latest-shot").replaceChildren(link, row(when(item.created_at), mb(item.size_bytes) + " · JPEG", item, "Save"));
+    }
+
+    function renderReplay(item) {
+      if (!item || item.filename === shownReplay) return;
+      shownReplay = item.filename;
+      const video = document.createElement("video");
+      video.className = "media";
+      video.src = item.url + "#t=0.1";
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      const length = item.approx_seconds ? "~" + item.approx_seconds + " s · " : "";
+      $("latest-replay").replaceChildren(video, row(when(item.created_at), length + mb(item.size_bytes) + " · MP4", item, "Download"));
+    }
+
+    function renderStatus(s) {
+      const pill = $("pill");
+      let cls = "", text = "Buffer off";
+      if (!s.device_detected) {
+        cls = "bad"; text = "No capture device";
+      } else if (s.buffer_state === "running") {
+        cls = "ok"; text = "Live";
+      } else if (s.buffer_state === "starting") {
+        cls = "warn"; text = "Starting…";
+      } else if (s.buffer_state === "restarting") {
+        cls = "warn"; text = "Reconnecting…";
+      }
+      pill.className = "pill " + cls;
+      $("pill-text").textContent = text;
+
+      const showError = s.last_error && s.buffer_state !== "running";
+      $("error").style.display = showError ? "block" : "none";
+      $("error").textContent = showError ? s.last_error.slice(0, 240) : "";
+
+      const ready = Math.min(s.buffered_seconds, s.replay_seconds);
+      $("meter").style.width = (s.buffer_running ? (100 * ready) / s.replay_seconds : 0) + "%";
+      if (!s.buffer_running) $("replay-sub").textContent = "Buffer not running";
+      else if (ready < s.replay_seconds) $("replay-sub").textContent = ready + " s of " + s.replay_seconds + " s buffered";
+      else $("replay-sub").textContent = "Ready · saves an MP4 with audio";
+
+      $("footer").textContent = s.capture_mode + " · " + (s.disk_free_bytes / 1e9).toFixed(0) + " GB free";
+      renderShot(s.latest_screenshot);
+      renderReplay(s.latest_replay);
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch("/api/status", { cache: "no-store" });
+        renderStatus(await res.json());
+      } catch (err) {
+        $("pill").className = "pill bad";
+        $("pill-text").textContent = "Offline";
+      }
+    }
+
+    async function action(button, url, busyText) {
+      const icon = button.querySelector(".icon");
+      const label = button.querySelector(".label");
+      const iconHtml = icon.innerHTML;
+      const labelText = label.textContent;
+      button.disabled = true;
+      icon.innerHTML = '<span class="spinner"></span>';
+      label.textContent = busyText;
+      try {
+        const res = await fetch(url, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+        if (data.media_type === "screenshot") {
+          renderShot(data);
+          toast("Screenshot saved");
+        } else {
+          renderReplay(data);
+          toast("Clip saved · " + mb(data.size_bytes));
+        }
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        button.disabled = false;
+        icon.innerHTML = iconHtml;
+        label.textContent = labelText;
+        refresh();
+      }
+    }
+
+    $("shot").addEventListener("click", () => action($("shot"), "/api/screenshot", "Grabbing…"));
+    $("replay").addEventListener("click", () => action($("replay"), "/api/replay", "Saving clip…"));
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>

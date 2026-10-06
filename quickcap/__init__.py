@@ -1,0 +1,2 @@
+"""QuickCap core package."""
+

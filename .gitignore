@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.python-version
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+*.egg-info/
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# QuickCap local media/output
+quickcap-runtime/
+captures/
+recordings/
+buffer/
+seg_*.ts
+*.part
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.jpg
+*.jpeg
+*.png
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
