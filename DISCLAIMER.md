@@ -31,3 +31,7 @@ Snapback is an independent project. It is not affiliated with, endorsed by, or s
 ## Not Legal Advice
 
 Nothing in this project is legal advice. If you are unsure whether a capture is lawful, do not make it.
+
+## Contact
+
+Questions, concerns, or takedown requests: [contact@snapback.video](mailto:contact@snapback.video).

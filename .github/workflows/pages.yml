@@ -1,5 +1,6 @@
 # Publishes site/ to GitHub Pages as-is (no build step).
-# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+# Repo Settings → Pages must use Source "GitHub Actions"; the custom domain
+# (snapback.video) lives in those settings, not in a CNAME file.
 name: Pages
 
 on:

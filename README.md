@@ -1,6 +1,6 @@
 # Snapback
 
-**Instant replay for anything with HDMI.** Website: [dconroy.github.io/snapback](https://dconroy.github.io/snapback/)
+**Instant replay for anything with HDMI.** Website: [snapback.video](https://snapback.video/) · Contact: [contact@snapback.video](mailto:contact@snapback.video)
 
 Snapback turns a Raspberry Pi 5 with an Elgato Cam Link 4K into a tiny HDMI capture box for the home network. Open it on an iPhone and there are two buttons:
 
@@ -74,7 +74,15 @@ Unit tests mock ffmpeg and need no hardware. Hardware checks are in [docs/manual
 
 ## Website
 
-The marketing page is plain HTML in [`site/`](site/). It's published by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on every push to `main` that touches `site/`. One-time setup: in the GitHub repo, go to Settings → Pages and set Source to "GitHub Actions". To preview it locally, open `site/index.html` in a browser.
+The marketing page at [snapback.video](https://snapback.video/) is plain HTML in [`site/`](site/). It's published to GitHub Pages by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on every push to `main` that touches `site/`. To preview it locally, open `site/index.html` in a browser.
+
+Pages is set to Source "GitHub Actions", with the custom domain `snapback.video` configured in the repo's Pages settings. There's no `CNAME` file because GitHub ignores it for Actions deployments. DNS at the registrar must point at GitHub Pages:
+
+| Host | Type | Value |
+| --- | --- | --- |
+| `@` | A | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` |
+| `@` | AAAA | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` |
+| `www` | CNAME | `dconroy.github.io` |
 
 ## Docs
 

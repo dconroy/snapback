@@ -52,6 +52,8 @@ Scope was narrowed to two actions: Grab Screenshot and Download Last 30 Seconds.
 - Done: product renamed to Snapback (code name and Python package stay `quickcap`).
 - Done: static page in `site/` (plain HTML/CSS, CSS phone mockup of the app), deployed by `.github/workflows/pages.yml`.
 - Done: liability disclaimer in `DISCLAIMER.md`, README, the site, and the app footer.
-- Next: in GitHub Settings → Pages, set Source to "GitHub Actions" (one-time, manual).
+- Done: Pages source set to GitHub Actions; custom domain `snapback.video` set in repo Pages settings.
+- Next: add the GitHub Pages DNS records at the registrar (see README "Website"), then tick "Enforce HTTPS" once the certificate is issued.
+- Next: verify `snapback.video` under GitHub account Settings → Pages (verified domains) to prevent domain takeover.
 - Next: pick an open-source license (e.g. MIT) and add `LICENSE`; none is set yet.
 - Later: replace the CSS mockup with real screenshots once captured on the Pi. `*.png`/`*.jpg` are gitignored, so add an exception for `site/`.
