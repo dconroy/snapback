@@ -20,6 +20,10 @@ The marketing page (`site/index.html`, published to www.snapback.video) must des
 - Don't advertise anything that isn't built and deployed yet.
 - Images in `site/` must not contain real team, league, or brand logos (see the "Not affiliated" fine print).
 
+## Git
+
+Agents may commit and push to `main` in this repo without asking. Run the tests first, write a clear commit message, and never commit `.env` or captured media. Pushes that touch `site/` publish the marketing site.
+
 ## Pi Safety
 
 - `sudo` on the Pi is allowed. Feed the password from `.env` over stdin (`printf '%s\n' "$ssh_password" | pi_ssh "sudo -S -p '' ..."`) so it never appears in a command line or output. Tell the user what you changed.
