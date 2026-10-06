@@ -37,6 +37,9 @@ seg_*.ts
 *.jpg
 *.jpeg
 *.png
+!site/*.jpg
+!site/*.jpeg
+!site/*.png
 
 # Logs and temporary files
 *.log
