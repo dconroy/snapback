@@ -133,7 +133,17 @@
     .frame { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: #1d3b2a; }
     .shot .meta { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px; font-size: 10px; }
     .shot .meta span { color: var(--muted); display: block; font-size: 9px; }
-    .shot .meta em { font-style: normal; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); font-weight: 600; }
+    .shot .meta em { font-style: normal; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--surface-2); font-weight: 700; font-size: 10px; }
+    .live-view { position: relative; margin-bottom: 9px; }
+    .live-view .badge { position: absolute; top: 6px; left: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 7px; font-weight: 700; letter-spacing: 0.06em; }
+    .live-view .badge i { width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
+    .live-view .mute { position: absolute; top: 5px; right: 5px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; }
+    .live-view .mute svg { width: 11px; height: 11px; }
+    .recent { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .recent .meta { padding: 6px 7px; font-size: 9px; }
+    .recent .meta span { font-size: 8px; }
+    .clip { position: relative; display: block; }
+    .clip b { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 11px; text-shadow: 0 0 6px rgba(0, 0, 0, 0.8); }
 
     section { padding: 80px 0; border-top: 1px solid var(--line); }
     h2 { margin: 0 0 12px; font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.03em; line-height: 1.1; }
@@ -208,6 +218,11 @@
       <div class="phone" aria-label="Snapback app on an iPhone">
         <div class="screen">
           <div class="app-head"><b>Snapback</b><span class="live"><i></i>Live</span></div>
+          <div class="shot live-view">
+            <img class="frame" src="touchdown.jpg" alt="Live view of a diving touchdown catch" width="800" height="450">
+            <span class="badge"><i></i>LIVE</span>
+            <span class="mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></span>
+          </div>
           <div class="tile white">
             <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
             <span><b>Grab Screenshot</b><small>Saves a full-size JPEG</small></span>
@@ -217,10 +232,16 @@
             <span><b>Download Last 30 Seconds</b><small>Ready · saves an MP4 with audio</small></span>
             <span class="bar"></span>
           </div>
-          <div class="label">Latest screenshot</div>
-          <div class="shot">
-            <img class="frame" src="touchdown.jpg" alt="Screenshot of a diving touchdown catch" width="800" height="450">
-            <div class="meta"><div>Today, 8:41:07 PM<span>412 KB · JPEG</span></div><em>Save</em></div>
+          <div class="label">Recent</div>
+          <div class="recent">
+            <div class="shot">
+              <img class="frame" src="touchdown.jpg" alt="" width="800" height="450">
+              <div class="meta"><div>8:41 PM<span>412 KB · JPEG</span></div><em>↓</em></div>
+            </div>
+            <div class="shot">
+              <span class="clip"><img class="frame" src="touchdown.jpg" alt="" width="800" height="450"><b>▶</b></span>
+              <div class="meta"><div>8:41 PM<span>30 s · 9 MB</span></div><em>↓</em></div>
+            </div>
           </div>
         </div>
       </div>

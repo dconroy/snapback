@@ -157,24 +157,71 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 8px;
+      padding: 10px 12px;
     }
     .meta { min-width: 0; }
-    .meta strong { display: block; font-size: 15px; font-weight: 600; }
-    .meta span { display: block; font-size: 13px; color: var(--muted); }
+    .meta strong { display: block; font-size: 14px; font-weight: 600; }
+    .meta span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .open {
       flex: none;
-      padding: 9px 14px;
-      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
       background: var(--surface-2);
       color: var(--text);
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
     }
-    button.open { border: 0; font-family: inherit; cursor: pointer; }
-    #live { margin-bottom: 18px; }
+    .open svg { width: 17px; height: 17px; }
+
+    #live { position: relative; margin-bottom: 18px; }
+    .glass {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff;
+    }
+    #live-badge {
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    #live-badge .dot { width: 7px; height: 7px; background: var(--red); }
+    #live-toggle {
+      top: 8px;
+      right: 8px;
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #live-toggle svg { width: 20px; height: 20px; }
+
+    .recent { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .recent .card { margin: 0; }
+    .recent .empty { font-size: 13px; }
+    .thumb { position: relative; display: block; }
+    .thumb video { pointer-events: none; }
+    .thumb .play {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+    .thumb .play svg { width: 34px; height: 34px; padding: 9px; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; }
     .empty {
       display: grid;
       place-items: center;
@@ -218,10 +265,8 @@
     <img id="live-frame" class="media" alt="Live HDMI preview" hidden>
     <video id="live-video" class="media" playsinline controls hidden></video>
     <div id="live-empty" class="empty">No live signal</div>
-    <div class="row">
-      <div class="meta"><strong id="live-title">Live preview</strong><span id="live-sub">Updates twice a second, no sound</span></div>
-      <button id="live-toggle" class="open" type="button">Watch with sound</button>
-    </div>
+    <span id="live-badge" class="glass" hidden><span class="dot"></span><span id="live-badge-text">LIVE</span></span>
+    <button id="live-toggle" class="glass" type="button" aria-label="Watch with sound"></button>
   </div>
 
   <div class="actions">
@@ -240,11 +285,11 @@
     </button>
   </div>
 
-  <h2>Latest screenshot</h2>
-  <div class="card" id="latest-shot"><div class="empty">No screenshot yet</div></div>
-
-  <h2>Latest clip</h2>
-  <div class="card" id="latest-replay"><div class="empty">No clip yet</div></div>
+  <h2>Recent</h2>
+  <div class="recent">
+    <div class="card" id="latest-shot"><div class="empty">No screenshot yet</div></div>
+    <div class="card" id="latest-replay"><div class="empty">No clip yet</div></div>
+  </div>
 
   <footer><span id="footer"></span><br>Home project, provided as-is without warranty. You're responsible for what you capture.</footer>
   <div id="toast" role="status" aria-live="polite"></div>
@@ -258,9 +303,17 @@
     function when(iso) {
       const d = new Date(iso);
       const sameDay = d.toDateString() === new Date().toDateString();
-      const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
-      return sameDay ? "Today, " + time : d.toLocaleDateString([], { month: "short", day: "numeric" }) + ", " + time;
+      return sameDay
+        ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        : d.toLocaleDateString([], { month: "short", day: "numeric" });
     }
+
+    const ICONS = {
+      save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>',
+      play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+      muted: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+      sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    };
 
     function mb(bytes) {
       return bytes >= 1e6 ? (bytes / 1e6).toFixed(0) + " MB" : (bytes / 1e3).toFixed(0) + " KB";
@@ -274,7 +327,7 @@
       toastTimer = setTimeout(() => (el.className = bad ? "bad" : ""), bad ? 5000 : 2500);
     }
 
-    function row(title, detail, item, linkText) {
+    function row(title, detail, item, label) {
       const r = document.createElement("div");
       r.className = "row";
       const meta = document.createElement("div");
@@ -288,35 +341,45 @@
       a.className = "open";
       a.href = item.url;
       a.download = item.filename;
-      a.textContent = linkText;
+      a.setAttribute("aria-label", label);
+      a.innerHTML = ICONS.save;
       r.append(meta, a);
       return r;
+    }
+
+    function thumb(item, media) {
+      const link = document.createElement("a");
+      link.className = "thumb";
+      link.href = item.url;
+      media.className = "media";
+      link.append(media);
+      return link;
     }
 
     function renderShot(item) {
       if (!item || item.filename === shownShot) return;
       shownShot = item.filename;
       const img = document.createElement("img");
-      img.className = "media";
       img.src = item.url;
       img.alt = "Latest screenshot";
-      const link = document.createElement("a");
-      link.href = item.url;
-      link.append(img);
-      $("latest-shot").replaceChildren(link, row(when(item.created_at), mb(item.size_bytes) + " · JPEG", item, "Save"));
+      $("latest-shot").replaceChildren(thumb(item, img), row(when(item.created_at), mb(item.size_bytes) + " · JPEG", item, "Save screenshot"));
     }
 
     function renderReplay(item) {
       if (!item || item.filename === shownReplay) return;
       shownReplay = item.filename;
       const video = document.createElement("video");
-      video.className = "media";
       video.src = item.url + "#t=0.1";
-      video.controls = true;
+      video.muted = true;
       video.playsInline = true;
       video.preload = "metadata";
-      const length = item.approx_seconds ? "~" + item.approx_seconds + " s · " : "";
-      $("latest-replay").replaceChildren(video, row(when(item.created_at), length + mb(item.size_bytes) + " · MP4", item, "Download"));
+      const link = thumb(item, video);
+      const play = document.createElement("span");
+      play.className = "play";
+      play.innerHTML = ICONS.play;
+      link.append(play);
+      const length = item.approx_seconds ? item.approx_seconds + " s · " : "";
+      $("latest-replay").replaceChildren(link, row(when(item.created_at), length + mb(item.size_bytes) + " · MP4", item, "Download clip"));
     }
 
     function renderStatus(s) {
@@ -396,6 +459,14 @@
       $("live-frame").hidden = mode !== "frame";
       $("live-video").hidden = mode !== "video";
       $("live-empty").hidden = mode !== "empty";
+      $("live-badge").hidden = mode === "empty";
+    }
+
+    function setToggle(on) {
+      const toggle = $("live-toggle");
+      toggle.innerHTML = on ? ICONS.sound : ICONS.muted;
+      toggle.setAttribute("aria-label", on ? "Back to silent preview" : "Watch with sound");
+      $("live-badge-text").textContent = on ? "LIVE · SOUND · ~5 S DELAY" : "LIVE";
     }
 
     let framePending = false;
@@ -432,19 +503,16 @@
         video.src = "/live/stream.m3u8";
         video.play().catch(() => {});
         showLive("video");
-        $("live-title").textContent = "Live video";
-        $("live-sub").textContent = "A few seconds behind, with sound";
-        $("live-toggle").textContent = "Back to preview";
       } else {
         video.pause();
         video.removeAttribute("src");
         video.load();
-        $("live-title").textContent = "Live preview";
-        $("live-sub").textContent = "Updates twice a second, no sound";
-        $("live-toggle").textContent = "Watch with sound";
         pollFrame();
       }
+      setToggle(on);
     }
+
+    setToggle(false);
 
     if ($("live-video").canPlayType("application/vnd.apple.mpegurl") === "") {
       $("live-toggle").hidden = true;
