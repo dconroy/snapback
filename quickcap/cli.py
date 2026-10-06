@@ -28,7 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     replay_parser.add_argument("--seconds", type=float, default=40.0)
     serve_parser = subparsers.add_parser("serve", help="Run the QuickCap web app")
     serve_parser.add_argument("--host", default="0.0.0.0")
-    serve_parser.add_argument("--port", type=int, default=8000)
+    serve_parser.add_argument("--port", type=int, default=8080)
     return parser
 
 

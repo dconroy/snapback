@@ -1,76 +1,62 @@
 # Pi Startup
 
-QuickCap does not auto-start on boot. Nothing in this repo installs or enables a service.
+Snapback runs on the Pi as a systemd **user** service, `snapback.service`, for the `pi` user. It is installed and restarted by `scripts/deploy.sh` from the Mac. It is **not enabled at boot**.
 
-## Run The App Manually
+## How It Is Set Up
 
-```sh
-cd ~/quickcap
-python3 -m venv .venv                         # first time only
-.venv/bin/pip install -r requirements.txt     # first time / after pulls that change it
-.venv/bin/python -m quickcap serve            # http://quikcap.local:8000/
-```
+- Code: `~/quickcap` (copied by rsync; there is no git checkout on the Pi).
+- Virtualenv: `~/quickcap/.venv`.
+- Unit file: `~/.config/systemd/user/snapback.service`, generated from `deploy/snapback.service`.
+- Optional settings: `~/quickcap-runtime/snapback.env` (`QUICKCAP_*=value` lines).
+- Media and buffer: `~/quickcap-runtime/captures`, `~/quickcap-runtime/buffer`.
+- Logs: `journalctl --user-unit snapback.service`; ffmpeg warnings in `~/quickcap-runtime/buffer/ffmpeg-buffer.log`.
+- Port: 8080, the same port the Phase 1 preview server used. They can't run together anyway, since both need `/dev/video0`.
 
-To keep it running after you log out without a service, use `tmux` or:
+User services keep running after you log out because lingering is enabled for `pi` (`loginctl show-user pi -p Linger` → `yes`). It was already on when Snapback was first deployed. If a reimage turns it off, run `sudo loginctl enable-linger pi`.
 
-```sh
-nohup .venv/bin/python -m quickcap serve >> ~/quickcap-runtime/quickcap.log 2>&1 &
-```
+## Commands
 
-Stop it with Ctrl-C (or `pkill -INT -f 'quickcap serve'`). That stops the buffer ffmpeg too.
-
-## Optional: systemd Service (Not Installed)
-
-A template unit is in `deploy/quickcap.service`. It assumes the repo is at `/home/pi/quickcap`, the venv is at `.venv`, and the user is `pi`. Review it, then install only if you want it:
+From the Mac, using `.env` for SSH details:
 
 ```sh
-sudo cp deploy/quickcap.service /etc/systemd/system/quickcap.service
-sudo systemctl daemon-reload
-sudo systemctl start quickcap          # run now
-journalctl -u quickcap -f              # logs
-sudo systemctl enable quickcap         # ONLY if you want it on every boot
+scripts/deploy.sh
+scripts/pi-ctl.sh status | logs [N] | ffmpeg-log [N] | start | stop | restart | ssh
 ```
 
-Remove it again:
+On the Pi directly:
 
 ```sh
-sudo systemctl disable --now quickcap
-sudo rm /etc/systemd/system/quickcap.service
-sudo systemctl daemon-reload
+systemctl --user status snapback
+systemctl --user restart snapback
+journalctl --user-unit snapback -f
 ```
 
-Do not run the service and a manual `quickcap serve` at the same time. The second one cannot get port 8000 or the capture device lock.
+Running by hand for debugging (stop the service first):
+
+```sh
+systemctl --user stop snapback
+cd ~/quickcap && .venv/bin/python -m quickcap serve
+```
+
+## Opt In: Start At Boot
+
+Only do this if you want Snapback running after every reboot:
+
+```sh
+systemctl --user enable snapback      # undo: systemctl --user disable snapback
+```
+
+With lingering on, enabled user services start at boot without anyone logging in.
 
 ## Phase 1 Preview Server
 
-The temporary `@reboot` cron hook that launched the Phase 1 diagnostic preview server has been removed. The preview server and QuickCap cannot run at the same time because both read `/dev/video0`.
-
-The preview startup script is still on the Pi for manual use:
+The temporary `@reboot` cron hook that launched the Phase 1 diagnostic preview server has been removed. `scripts/pi-install.sh` stops the preview server on each deploy. To use the preview again, stop Snapback first:
 
 ```sh
-#!/bin/sh
-set -eu
-
-mkdir -p "$HOME/quickcap-runtime"
-
-if pgrep -f '/home/pi/quickcap_preview_server.py' >/dev/null 2>&1; then
-  exit 0
-fi
-
-exec /usr/bin/python3 /home/pi/quickcap_preview_server.py \
-  --host 0.0.0.0 \
-  --port 8080 \
-  --device /dev/video0 \
-  --input-format mjpeg \
-  --video-size 1920x1080 \
-  --framerate 60 \
-  --preview-fps 15 \
-  >> "$HOME/quickcap-runtime/preview.log" 2>&1
-```
-
-```sh
-crontab -l                                         # confirm no boot hook
+systemctl --user stop snapback
+/home/pi/start_quickcap_preview.sh                 # serves http://quikcap.local:8080/
 pgrep -af '/home/pi/quickcap_preview_server.py'    # is it running?
-/home/pi/start_quickcap_preview.sh                 # start it
-tail -f ~/quickcap-runtime/preview.log             # logs
+tail -f ~/quickcap-runtime/preview.log
 ```
+
+`~/quickcap-dev` on the Pi is an older manual copy of the capture engine from Phase 2. It is not used by the service and can be deleted.

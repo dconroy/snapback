@@ -42,7 +42,10 @@ Scope was narrowed to two actions: Grab Screenshot and Download Last 30 Seconds.
 - Done: unit tests for path safety, media listing, command construction, ownership, buffer pruning, replay assembly, web routes.
 - Done: systemd unit template in `deploy/` (not installed).
 - Done: smoke test of the real buffer/replay ffmpeg commands with synthetic input on a Mac.
-- Next: run `docs/manual-verification.md` on the Pi, especially real-time encoding at 1080p60.
+- Done: deploy tooling: `.env.example`, `scripts/deploy.sh` (rsync + install + restart), `scripts/pi-ctl.sh`, systemd user service `deploy/snapback.service` (not enabled at boot). App moved to port 8080.
+- Done: first deploy to the Pi; buffer, replay (30.0 s 1080p60 H.264/AAC), and screenshot verified on real hardware with a "NO SIGNAL" input.
+- Next: re-run `docs/manual-verification.md` with a real moving HDMI source, especially CPU and real-time encoding at 1080p60.
+- Later, maybe: show "no HDMI signal" in the status (the Cam Link sends its own NO SIGNAL card, so the device looks fine).
 - Later: automatic cleanup of old captures when disk gets low.
 - Later, maybe: exact 30.0 s trimming (currently 28-30 s of whole segments ending 0-2 s before the press).
 - Dropped for now: manual start/stop recording and a full media browser in the UI.
@@ -52,7 +55,7 @@ Scope was narrowed to two actions: Grab Screenshot and Download Last 30 Seconds.
 - Done: product renamed to Snapback (code name and Python package stay `quickcap`).
 - Done: static page in `site/` (plain HTML/CSS, CSS phone mockup of the app), deployed by `.github/workflows/pages.yml`.
 - Done: liability disclaimer in `DISCLAIMER.md`, README, the site, and the app footer.
-- Done: Pages source set to GitHub Actions; custom domain `snapback.video` set in repo Pages settings.
+- Done: Pages source set to GitHub Actions; custom domain `www.snapback.video` set in repo Pages settings (bare domain redirects).
 - Next: add the GitHub Pages DNS records at the registrar (see README "Website"), then tick "Enforce HTTPS" once the certificate is issued.
 - Next: verify `snapback.video` under GitHub account Settings → Pages (verified domains) to prevent domain takeover.
 - Next: pick an open-source license (e.g. MIT) and add `LICENSE`; none is set yet.

@@ -2,7 +2,20 @@
 
 Unit tests mock ffmpeg. These checks need the real Pi, Cam Link, and an HDMI source. Run from `~/quickcap` on `quikcap.local` with the preview server stopped.
 
-Pre-hardware smoke test (done on a Mac, 2026-10-06): the exact buffer and replay commands ran with ffmpeg 9 against synthetic `lavfi` video/audio instead of V4L2/ALSA. The replay came out as a 10.0 s, 1920x1080/60 H.264 + 48 kHz stereo AAC MP4, and the screenshot as a 1920x1080 JPEG. Still to do: the checks below on the Pi (ffmpeg 7.1).
+Pre-hardware smoke test (done on a Mac, 2026-10-06): the exact buffer and replay commands ran with ffmpeg 9 against synthetic `lavfi` video/audio instead of V4L2/ALSA. The replay came out as a 10.0 s, 1920x1080/60 H.264 + 48 kHz stereo AAC MP4, and the screenshot as a 1920x1080 JPEG.
+
+## Results On The Pi (2026-10-06, first deploy)
+
+Deployed with `scripts/deploy.sh`; running as `snapback.service` on port 8080. The Cam Link was showing its own "NO SIGNAL" card (no HDMI source active), so the picture was static:
+
+- New `seg_*.ts` every 2.0 s; the segment count leveled off at 31.
+- `POST /api/replay` → 30.003 s MP4, h264 1920x1080 60/1 + aac 48 kHz stereo (checked with `ffprobe` on the Pi).
+- `POST /api/screenshot` → 1920x1080 JPEG of the live input.
+- ffmpeg ~170% CPU (of 400%), 58 °C, `get_throttled=0x0`.
+- ffmpeg log only had harmless startup notices (`EOI missing, emulating`, `Guessed Channel Layout`, `deprecated pixel format`).
+- `GET /` 200; `/media/..%2F..%2Fetc%2Fpasswd` 404.
+
+**Still to verify with a real moving HDMI source:** CPU and real-time cadence with busy content (static frames are much cheaper to encode), the phone checks below, and the failure handling.
 
 ## 1. Engine without the web app
 
@@ -39,7 +52,7 @@ If it falls behind, see "Performance Notes" in `docs/web-app.md`.
 
 ## 3. Phone
 
-On the iPhone, open `http://quikcap.local:8000/`.
+On the iPhone, open `http://quikcap.local:8080/`.
 
 - [ ] status line shows "Capture device OK · buffer running (Ns)"
 - [ ] Grab Screenshot shows a preview of the HDMI picture within ~1 s
@@ -50,5 +63,5 @@ On the iPhone, open `http://quikcap.local:8000/`.
 
 - [ ] Unplug HDMI from the source for 10 s and plug it back in: status shows an error or restarting, then recovers to running without restarting the app.
 - [ ] Start `python -m quickcap photo` while the app runs: it fails with "capture device is in use by another QuickCap process".
-- [ ] `curl -i http://quikcap.local:8000/media/..%2F..%2Fetc%2Fpasswd` → 404.
+- [ ] `curl -i http://quikcap.local:8080/media/..%2F..%2Fetc%2Fpasswd` → 404.
 - [ ] Ctrl-C the app: `pgrep ffmpeg` shows nothing left running.

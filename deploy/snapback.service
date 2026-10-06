@@ -1,0 +1,19 @@
+# Snapback as a systemd *user* service (no sudo). Installed by scripts/deploy.sh to
+# ~/.config/systemd/user/. It is started/restarted by deploys but NOT enabled at boot;
+# see docs/pi-startup.md to opt in.
+[Unit]
+Description=Snapback HDMI capture web app
+After=sound.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/quickcap
+EnvironmentFile=-%h/quickcap-runtime/snapback.env
+ExecStart=%h/quickcap/.venv/bin/python -m quickcap serve --host 0.0.0.0 --port 8080
+KillSignal=SIGINT
+TimeoutStopSec=15
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
