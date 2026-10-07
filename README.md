@@ -2,9 +2,9 @@
 
 **Instant replay for anything with HDMI.** Website: [snapback.video](https://www.snapback.video/) · Contact: [contact@snapback.video](mailto:contact@snapback.video)
 
-[![Snapback: instant replay for anything with HDMI, shown on an iPhone](docs/images/hero.png)](https://www.snapback.video/)
+[![Snapback: instant replay for anything with HDMI, shown on a phone](docs/images/hero.png)](https://www.snapback.video/)
 
-Snapback turns a Raspberry Pi 5 with an Elgato Cam Link 4K into a tiny HDMI capture box for the home network. Open it on an iPhone and there are two buttons:
+Snapback turns a Raspberry Pi 5 with an Elgato Cam Link 4K into a tiny HDMI capture box for the home network. Open it in your phone's browser and there are two buttons:
 
 1. **Grab Screenshot**: saves a 1920x1080 JPEG of the live HDMI input.
 2. **Download Last 30 Seconds**: saves the previous ~30 seconds (H.264 + AAC MP4).
@@ -21,7 +21,7 @@ No accounts, cloud, telemetry, database, Docker, or JS build tooling. Python + F
 
 ## Hardware
 
-![HDMI source to Cam Link 4K to Raspberry Pi 5 to iPhone, with the parts list](docs/images/hardware.png)
+![HDMI source to Cam Link 4K to Raspberry Pi 5 to your phone, with the parts list](docs/images/hardware.png)
 
 - Raspberry Pi 5 (4 GB is plenty) with an active cooler
 - Elgato Cam Link 4K
@@ -66,7 +66,7 @@ Environment variables, all optional. If you run Snapback as a service, put them 
 - `POST /api/replay`: saves the last ~30 s and returns `{filename, url, approx_seconds, ...}`.
 - `GET /media/{filename}`: serves a file from the media directory only (strict filename check, no subpaths).
 - `GET /live/frame.jpg`: the buffer's newest frame (refreshed twice a second), for the live preview.
-- `GET /live/stream.m3u8`: an HLS live playlist over the newest buffer segments, for live video with sound (Safari plays it natively). Segments are served from `/live/seg_NNNNNN.ts`.
+- `GET /live/stream.m3u8`: an HLS live playlist over the newest buffer segments, for live video with sound in browsers that play HLS natively, such as Safari (elsewhere the page hides the live-video toggle and keeps the frame preview). Segments are served from `/live/seg_NNNNNN.ts`.
 
 Errors are JSON `{"detail": "..."}`: `409` if the capture device is busy, `503` if capture failed or the buffer has no footage.
 
