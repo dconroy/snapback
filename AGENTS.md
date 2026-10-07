@@ -16,6 +16,7 @@ The marketing page (`site/index.html`, published to www.snapback.video) must des
 
 - Feature cards, the "How it works" steps, the hero copy, and the phone mockup should match the real app UI.
 - Keep the README feature list and HTTP API section in sync too.
+- The README's images in `docs/images/` are screenshots of the site. After changing the site, regenerate them with `python3 scripts/render-readme-images.py` (needs Google Chrome; run outside the sandbox).
 - Don't advertise anything that isn't built and deployed yet.
 - Images in `site/` must not contain real team, league, or brand logos (see the "Not affiliated" fine print).
 

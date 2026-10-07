@@ -40,6 +40,7 @@ seg_*.ts
 !site/*.jpg
 !site/*.jpeg
 !site/*.png
+!docs/images/*.png
 
 # Logs and temporary files
 *.log

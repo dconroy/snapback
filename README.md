@@ -2,6 +2,8 @@
 
 **Instant replay for anything with HDMI.** Website: [snapback.video](https://www.snapback.video/) · Contact: [contact@snapback.video](mailto:contact@snapback.video)
 
+[![Snapback: instant replay for anything with HDMI, shown on an iPhone](docs/images/hero.png)](https://www.snapback.video/)
+
 Snapback turns a Raspberry Pi 5 with an Elgato Cam Link 4K into a tiny HDMI capture box for the home network. Open it on an iPhone and there are two buttons:
 
 1. **Grab Screenshot**: saves a 1920x1080 JPEG of the live HDMI input.
@@ -11,9 +13,15 @@ Above them is a live view of the HDMI input: a near-real-time preview, or tap fo
 
 No accounts, cloud, telemetry, database, Docker, or JS build tooling. Python + FastAPI + ffmpeg + one HTML file.
 
+![How it works: plug it in, it keeps rolling, tap to keep it](docs/images/how-it-works.png)
+
+![Features: rolling 30-second buffer, 1080p60 in and full-res out, made for your phone, local network only, easy to hack on, watch it live](docs/images/features.png)
+
 > **Disclaimer:** Snapback is a personal home project provided **as-is, without warranty of any kind**. The authors are not liable for lost recordings, data loss, hardware damage, or anything else arising from its use. You are responsible for what you capture, including copyright, terms of service, and recording/consent laws. It has no login, so run it only on a trusted network and never expose it to the internet. Not affiliated with Raspberry Pi, Elgato, or Apple. Read the full [DISCLAIMER.md](DISCLAIMER.md).
 
 ## Hardware
+
+![HDMI source to Cam Link 4K to Raspberry Pi 5 to iPhone, with the parts list](docs/images/hardware.png)
 
 - Raspberry Pi 5 (4 GB is plenty) with an active cooler
 - Elgato Cam Link 4K
