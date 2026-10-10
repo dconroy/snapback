@@ -28,6 +28,8 @@ No accounts, cloud, telemetry, database, Docker, or JS build tooling. Python + F
 - A good 32 GB+ microSD card and the official 27 W USB-C power supply
 - Optional: an HDMI splitter so you can keep watching on a TV
 
+**Copy-protected sources show a solid blue screen.** Cable and satellite boxes, streaming sticks, and Blu-ray players usually encrypt their HDMI output with HDCP. Your TV can decrypt it; capture cards like the Cam Link can't, so Snapback only sees blue. This is expected and can't be fixed in software. Snapback works with sources that don't use HDCP, such as computers, cameras, and game consoles (on PlayStation, turn off "Enable HDCP" in the system settings).
+
 ## Install
 
 On Raspberry Pi OS with `ffmpeg` and Python 3 installed:
