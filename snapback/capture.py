@@ -27,6 +27,7 @@ DEFAULT_RUNTIME_DIR = "~/snapback-runtime"
 SEGMENT_TEMPLATE = "seg_%06d.ts"
 SEGMENT_RE = re.compile(r"^seg_(\d{6})\.ts$")
 LATEST_FRAME_NAME = "latest.jpg"
+PREVIEW_FRAME_NAME = "preview.jpg"
 LIVE_WINDOW_SEGMENTS = 6
 BUFFER_LOG_NAME = "ffmpeg-buffer.log"
 X264_PRESETS = (
@@ -69,7 +70,9 @@ class CaptureConfig:
     buffer_keep_seconds: int = 60
     replay_seconds: int = 30
     x264_preset: str = "ultrafast"
-    screenshot_fps: int = 5
+    screenshot_fps: int = 2
+    preview_fps: int = 10
+    preview_width: int = 960
 
     def __post_init__(self) -> None:
         if self.buffer_dir is None:
@@ -285,9 +288,9 @@ class CaptureEngine:
     def take_photo(self) -> MediaItem:
         return self._capture_still("photo")
 
-    def _read_fresh_frame(self) -> bytes | None:
-        frame_path = self.config.buffer_dir / LATEST_FRAME_NAME
-        max_age = max(3.0, 3.0 / self.config.screenshot_fps)
+    def _read_fresh_frame(self, name: str = LATEST_FRAME_NAME, fps: int | None = None) -> bytes | None:
+        frame_path = self.config.buffer_dir / name
+        max_age = max(3.0, 3.0 / (fps or self.config.screenshot_fps))
         try:
             data = frame_path.read_bytes()
             age = time.time() - frame_path.stat().st_mtime
@@ -433,6 +436,22 @@ class CaptureEngine:
             "-atomic_writing",
             "1",
             str(c.buffer_dir / LATEST_FRAME_NAME),
+            # Output 3: small, frequent frame for the live preview.
+            "-map",
+            "0:v",
+            "-vf",
+            f"fps={c.preview_fps},scale={c.preview_width}:-2",
+            "-c:v",
+            "mjpeg",
+            "-q:v",
+            "5",
+            "-f",
+            "image2",
+            "-update",
+            "1",
+            "-atomic_writing",
+            "1",
+            str(c.buffer_dir / PREVIEW_FRAME_NAME),
         ]
 
     def start_buffer(self) -> None:
@@ -474,6 +493,7 @@ class CaptureEngine:
             for stale in self._all_segments():
                 stale.unlink(missing_ok=True)
             (buffer_dir / LATEST_FRAME_NAME).unlink(missing_ok=True)
+            (buffer_dir / PREVIEW_FRAME_NAME).unlink(missing_ok=True)
             (buffer_dir / BUFFER_LOG_NAME).unlink(missing_ok=True)
             log_file = open(buffer_dir / BUFFER_LOG_NAME, "ab")
             try:
@@ -549,10 +569,10 @@ class CaptureEngine:
     # ----- live view --------------------------------------------------------
 
     def live_frame(self) -> bytes | None:
-        """The buffer's newest JPEG frame, or None if the buffer isn't producing one."""
+        """The buffer's newest preview JPEG, or None if the buffer isn't producing one."""
         if not self.buffer_running:
             return None
-        return self._read_fresh_frame()
+        return self._read_fresh_frame(PREVIEW_FRAME_NAME, self.config.preview_fps)
 
     def live_playlist(self) -> str | None:
         """An HLS live playlist over the newest completed buffer segments."""

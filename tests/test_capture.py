@@ -141,7 +141,9 @@ class BufferCommandTests(unittest.TestCase):
         self.assertEqual(command[command.index("-segment_time") + 1], "2")
         self.assertEqual(command[command.index("-g") + 1], "120")
         self.assertIn("/rt/buffer/seg_%06d.ts", command)
-        self.assertEqual(command[-1], "/rt/buffer/latest.jpg")
+        self.assertIn("/rt/buffer/latest.jpg", command)
+        self.assertEqual(command[-1], "/rt/buffer/preview.jpg")
+        self.assertIn("fps=10,scale=960:-2", command)
 
     def test_replay_command_concats_segments_without_reencoding(self) -> None:
         engine = CaptureEngine(CaptureConfig(media_dir=Path("/rt/captures")))
@@ -250,7 +252,7 @@ class LiveViewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             engine = make_engine(tmpdir)
             engine.config.buffer_dir.mkdir(parents=True)
-            (engine.config.buffer_dir / "latest.jpg").write_bytes(JPEG)
+            (engine.config.buffer_dir / "preview.jpg").write_bytes(JPEG)
             self.assertIsNone(engine.live_frame())
 
             engine._buffer_process = FakeProcess()

@@ -70,7 +70,7 @@ Environment variables, all optional. If you run Snapback as a service, put them 
 - `POST /api/screenshot`: saves a JPEG and returns `{filename, url, size_bytes, ...}`.
 - `POST /api/replay`: saves the last ~30 s and returns `{filename, url, approx_seconds, ...}`.
 - `GET /media/{filename}`: serves a file from the media directory only (strict filename check, no subpaths).
-- `GET /live/frame.jpg`: the buffer's newest frame (refreshed five times a second), for the live preview.
+- `GET /live/frame.jpg`: the buffer's newest 960x540 preview frame (refreshed ten times a second), for the live preview.
 - `GET /live/stream.m3u8`: an HLS live playlist over the newest buffer segments, for live video with sound in browsers that play HLS natively, such as Safari (elsewhere the page hides the live-video toggle and keeps the frame preview). Segments are served from `/live/seg_NNNNNN.ts`.
 
 Errors are JSON `{"detail": "..."}`: `409` if the capture device is busy, `503` if capture failed or the buffer has no footage.
