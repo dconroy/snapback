@@ -18,7 +18,7 @@
   <meta property="og:url" content="https://www.snapback.video/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Snapback · Instant replay for anything with HDMI">
-  <meta property="og:description" content="A Raspberry Pi 5 + Cam Link box that saves the last 30 seconds, or a screenshot, from your phone. No cloud, no accounts.">
+  <meta property="og:description" content="A Raspberry Pi 5 + USB capture card box that saves the last 30 seconds, or a screenshot, from your phone. No cloud, no accounts.">
   <meta name="theme-color" content="#0b0c0e">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
@@ -172,6 +172,7 @@
     .parts li { display: flex; justify-content: space-between; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
     .parts li:last-child { border-bottom: 0; }
     .parts span { color: var(--muted); font-size: 14px; text-align: right; }
+    .parts li.total { font-weight: 600; background: var(--surface-2, rgba(255, 255, 255, 0.03)); }
     .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 26px; font-size: 14px; font-weight: 600; }
     .chain b { padding: 9px 13px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; }
     .chain i { color: var(--muted); font-style: normal; }
@@ -265,7 +266,7 @@
         <div class="card">
           <span class="num">1</span>
           <h3>Plug it in</h3>
-          <p>HDMI from your console, camera, or computer goes into a Cam Link on a Raspberry Pi 5.</p>
+          <p>HDMI from your console, camera, or computer goes into a USB capture card on a Raspberry Pi 5.</p>
         </div>
         <div class="card">
           <span class="num">2</span>
@@ -324,19 +325,19 @@
     <div class="wrap hw">
       <div>
         <h2>What you need</h2>
-        <p class="section-lede">Off-the-shelf parts, no soldering, no GPIO.</p>
+        <p class="section-lede">Off-the-shelf parts, about $110 all in. No soldering, no GPIO.</p>
         <div class="chain">
-          <b>HDMI source</b><i>→</i><b>Cam Link 4K</b><i>→ USB →</i><b>Raspberry Pi 5</b><i>→ Wi-Fi →</i><b>Your phone</b>
+          <b>HDMI source</b><i>→</i><b>USB capture card</b><i>→ USB 3 →</i><b>Raspberry Pi 5</b><i>→ Wi-Fi →</i><b>Your phone</b>
         </div>
-        <p class="section-lede" style="margin-top: 18px;">Works with sources that don't use HDCP copy protection, like computers, cameras, and game consoles. Cable boxes and streaming devices usually do, and show up as a solid blue screen.</p>
+        <p class="section-lede" style="margin-top: 18px;">Works with sources that don't use HDCP copy protection, like computers, cameras, and game consoles. Cable boxes and streaming devices usually do, and can show up as a solid blue screen.</p>
       </div>
       <ul class="parts">
-        <li>Raspberry Pi 5 <span>4 GB is plenty</span></li>
-        <li>Elgato Cam Link 4K <span>USB HDMI capture</span></li>
-        <li>microSD card <span>32 GB+, a good one</span></li>
-        <li>Official Pi 5 power supply <span>27 W USB-C</span></li>
-        <li>HDMI splitter <span>Optional: keep watching on a TV</span></li>
-        <li>Active cooler <span>Recommended: encoding runs nonstop</span></li>
+        <li>Raspberry Pi 5 <span>4 GB is plenty · ~$60</span></li>
+        <li>HDMI capture card <span>USB 3, 1080p60 · ~$20</span></li>
+        <li>microSD card <span>32 GB+, a good one · ~$10</span></li>
+        <li>Official Pi 5 power supply <span>27 W USB-C · ~$12</span></li>
+        <li>Active cooler <span>Encoding runs nonstop · ~$5</span></li>
+        <li class="total">Total <span>about $110, rough US prices</span></li>
       </ul>
     </div>
   </section>

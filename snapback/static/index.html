@@ -492,7 +492,7 @@
       } finally {
         framePending = false;
       }
-      if (!liveVideo) frameTimer = setTimeout(pollFrame, 500);
+      if (!liveVideo) frameTimer = setTimeout(pollFrame, 200);
     }
 
     function setLiveVideo(on) {

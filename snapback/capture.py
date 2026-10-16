@@ -69,7 +69,7 @@ class CaptureConfig:
     buffer_keep_seconds: int = 60
     replay_seconds: int = 30
     x264_preset: str = "ultrafast"
-    screenshot_fps: int = 2
+    screenshot_fps: int = 5
 
     def __post_init__(self) -> None:
         if self.buffer_dir is None:
