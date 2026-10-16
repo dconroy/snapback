@@ -7,7 +7,7 @@
 Snapback turns a Raspberry Pi 5 with a USB HDMI capture card into a tiny HDMI capture box for the home network. Open it in your phone's browser and there are two buttons:
 
 1. **Grab Screenshot**: saves a 1920x1080 JPEG of the live HDMI input.
-2. **Download Last 30 Seconds**: saves the previous ~30 seconds (H.264 + AAC MP4).
+2. **Save Last 30 Seconds**: saves the previous ~30 seconds (H.264 + AAC MP4).
 
 Above them is a live view of the HDMI input: a near-real-time preview, or tap for live video with sound (a few seconds behind).
 
@@ -47,6 +47,8 @@ python3 -m venv .venv
 
 Then open `http://<your-pi>.local:8080/` on your phone. The rolling buffer starts with the app, so give it ~30 seconds before the first replay has full length.
 
+To add captures to Photos, open `https://<your-pi>.local:8443/` instead and accept the certificate warning once. The phone can then offer Save Image or Save Video. The plain `http` page can only download files.
+
 To run it as a service or start it at boot, see [docs/pi-startup.md](docs/pi-startup.md).
 
 ## Configuration
@@ -66,7 +68,7 @@ Environment variables, all optional. If you run Snapback as a service, put them 
 ## HTTP API
 
 - `GET /`: the web page.
-- `GET /api/status`: device detected, buffer state, buffered seconds, latest screenshot/replay, free disk, last error.
+- `GET /api/status`: device detected, buffer state, buffered seconds, latest screenshot/replay, the 12 newest captures, free disk, last error.
 - `POST /api/screenshot`: saves a JPEG and returns `{filename, url, size_bytes, ...}`.
 - `POST /api/replay`: saves the last ~30 s and returns `{filename, url, approx_seconds, ...}`.
 - `GET /media/{filename}`: serves a file from the media directory only (strict filename check, no subpaths).

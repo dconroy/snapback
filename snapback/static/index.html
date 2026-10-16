@@ -210,18 +210,34 @@
     }
     #live-toggle svg { width: 20px; height: 20px; }
 
-    .recent { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .recent .card { margin: 0; }
-    .recent .empty { font-size: 13px; }
-    .thumb { position: relative; display: block; }
-    .thumb video { pointer-events: none; }
-    .thumb .play {
-      position: absolute;
-      inset: 0;
+    .recent { display: grid; gap: 10px; }
+    .item {
       display: grid;
-      place-items: center;
+      grid-template-columns: 112px 1fr;
+      gap: 8px 12px;
+      align-items: center;
+      padding: 8px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--line);
     }
-    .thumb .play svg { width: 34px; height: 34px; padding: 9px; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; }
+    .item .thumb { grid-row: span 2; border-radius: 10px; overflow: hidden; }
+    .item .thumb .media { border-radius: 0; }
+    .item .meta strong { font-size: 15px; }
+    .item .save {
+      grid-column: 2;
+      justify-self: start;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: var(--text);
+      color: #111;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .item .save:disabled { opacity: 0.6; }
     .empty {
       display: grid;
       place-items: center;
@@ -275,23 +291,20 @@
       <span class="icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
       </span>
-      <span><span class="label">Grab Screenshot</span><span class="sub">Saves a full-size JPEG</span></span>
+      <span><span class="label">Grab Screenshot</span><span class="sub" id="shot-sub">Saves a full-size JPEG</span></span>
     </button>
     <button id="replay" class="action" type="button">
       <span class="icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>
       </span>
-      <span><span class="label">Download Last 30 Seconds</span><span class="sub" id="replay-sub">Saves an MP4 with audio</span></span>
+      <span><span class="label">Save Last 30 Seconds</span><span class="sub" id="replay-sub">Saves an MP4 with audio</span></span>
       <span class="track"><span class="meter" id="meter"></span></span>
     </button>
   </div>
+  <p id="save-hint" class="hint" hidden>To get the phone's Save to Photos prompt, open the <a id="https-link">secure page</a> and accept the certificate warning once.</p>
 
   <h2>Recent</h2>
-  <div class="recent">
-    <div class="card" id="latest-shot"><div class="empty">No screenshot yet</div></div>
-    <div class="card" id="latest-replay"><div class="empty">No clip yet</div></div>
-  </div>
-  <p id="save-hint" class="hint" hidden>To save to Photos: tap the save button, then long-press the photo and choose Save to Photos, or for a clip tap Share and choose Save Video.</p>
+  <div class="recent" id="recent"><div class="card"><div class="empty">Nothing saved yet</div></div></div>
 
   <footer><span id="footer"></span><br>Home project, provided as-is without warranty. You're responsible for what you capture.</footer>
   <div id="toast" role="status" aria-live="polite"></div>
@@ -299,10 +312,15 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const TOUCH = matchMedia("(pointer: coarse)").matches;
-    $("save-hint").hidden = !TOUCH;
-    let shownShot = null;
-    let shownReplay = null;
+    const SECURE = window.isSecureContext;
+    if (TOUCH && !SECURE) {
+      $("https-link").href = "https://" + location.hostname + ":8443/";
+      $("save-hint").hidden = false;
+    }
+    if (TOUCH && SECURE) $("shot-sub").textContent = "Adds a full-size photo to Photos";
+    let shownRecent = null;
     let toastTimer = null;
+    const fileCache = new Map();
 
     function when(iso) {
       const d = new Date(iso);
@@ -331,60 +349,109 @@
       toastTimer = setTimeout(() => (el.className = bad ? "bad" : ""), bad ? 5000 : 2500);
     }
 
-    function row(title, detail, item, label) {
-      const r = document.createElement("div");
-      r.className = "row";
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      const strong = document.createElement("strong");
-      strong.textContent = title;
-      const span = document.createElement("span");
-      span.textContent = detail;
-      meta.append(strong, span);
+    function fileType(item) {
+      return item.filename.endsWith(".mp4") ? "video/mp4" : "image/jpeg";
+    }
+
+    async function loadFile(item) {
+      const cached = fileCache.get(item.filename);
+      if (cached) return cached;
+      const res = await fetch(item.url);
+      if (!res.ok) throw new Error("Could not load " + item.filename);
+      const file = new File([await res.blob()], item.filename, { type: fileType(item) });
+      fileCache.set(item.filename, file);
+      return file;
+    }
+
+    function downloadItem(item) {
       const a = document.createElement("a");
-      a.className = "open";
       a.href = item.url;
-      if (TOUCH) a.target = "_blank";
-      else a.download = item.filename;
-      a.setAttribute("aria-label", label);
-      a.innerHTML = ICONS.save;
-      r.append(meta, a);
-      return r;
+      a.download = item.filename;
+      a.click();
     }
 
-    function thumb(item, media) {
-      const link = document.createElement("a");
-      link.className = "thumb";
-      link.href = item.url;
-      media.className = "media";
-      link.append(media);
-      return link;
+    async function addToPhotos(item) {
+      if (!TOUCH) {
+        downloadItem(item);
+        return "saved";
+      }
+      if (SECURE && navigator.share) {
+        try {
+          const file = await loadFile(item);
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
+            return "shared";
+          }
+        } catch (err) {
+          if (err.name === "AbortError") return "cancel";
+          if (err.name === "NotAllowedError") return "again";
+          throw err;
+        }
+      }
+      window.open(item.url, "_blank");
+      return "opened";
     }
 
-    function renderShot(item) {
-      if (!item || item.filename === shownShot) return;
-      shownShot = item.filename;
-      const img = document.createElement("img");
-      img.src = item.url;
-      img.alt = "Latest screenshot";
-      $("latest-shot").replaceChildren(thumb(item, img), row(when(item.created_at), mb(item.size_bytes) + " · JPEG", item, "Save screenshot"));
-    }
-
-    function renderReplay(item) {
-      if (!item || item.filename === shownReplay) return;
-      shownReplay = item.filename;
-      const video = document.createElement("video");
-      video.src = item.url + "#t=0.1";
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = "metadata";
-      const link = thumb(item, video);
-      const play = document.createElement("span");
-      play.className = "play";
-      play.innerHTML = ICONS.play;
-      link.append(play);
-      const length = item.approx_seconds ? item.approx_seconds + " s · " : "";
-      $("latest-replay").replaceChildren(link, row(when(item.created_at), length + mb(item.size_bytes) + " · MP4", item, "Download clip"));
+    function renderRecent(items) {
+      const list = items || [];
+      const key = list.map((item) => item.filename).join("|");
+      if (key === shownRecent) return;
+      shownRecent = key;
+      if (!list.length) {
+        $("recent").innerHTML = '<div class="card"><div class="empty">Nothing saved yet</div></div>';
+        return;
+      }
+      $("recent").replaceChildren(...list.map((item) => {
+        const row = document.createElement("div");
+        row.className = "item";
+        const videoFile = item.filename.endsWith(".mp4");
+        const media = videoFile ? document.createElement("video") : document.createElement("img");
+        media.className = "media";
+        media.src = videoFile ? item.url + "#t=0.1" : item.url;
+        if (videoFile) {
+          media.muted = true;
+          media.playsInline = true;
+          media.preload = "metadata";
+        } else {
+          media.alt = "";
+        }
+        const thumb = document.createElement("a");
+        thumb.className = "thumb";
+        thumb.href = item.url;
+        if (TOUCH) thumb.target = "_blank";
+        thumb.append(media);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const strong = document.createElement("strong");
+        strong.textContent = when(item.created_at);
+        const span = document.createElement("span");
+        const kind = item.filename.endsWith(".mp4") ? "Clip" : "Screenshot";
+        const length = item.approx_seconds ? item.approx_seconds + " s · " : "";
+        span.textContent = kind + " · " + length + mb(item.size_bytes);
+        meta.append(strong, span);
+        const save = document.createElement("button");
+        save.className = "save";
+        save.type = "button";
+        save.textContent = TOUCH ? "Add to Photos" : "Save";
+        save.addEventListener("click", async () => {
+          save.disabled = true;
+          const label = save.textContent;
+          save.textContent = "Preparing…";
+          try {
+            const result = await addToPhotos(item);
+            if (result === "again") toast("Tap Add to Photos again");
+            else if (result === "opened") toast("Opened — use Save to Photos");
+            else if (result === "saved") toast("Saved");
+          } catch (err) {
+            toast(err.message, true);
+          } finally {
+            save.disabled = false;
+            save.textContent = label;
+          }
+        });
+        row.append(thumb, meta, save);
+        return row;
+      }));
     }
 
     function renderStatus(s) {
@@ -410,11 +477,10 @@
       $("meter").style.width = (s.buffer_running ? (100 * ready) / s.replay_seconds : 0) + "%";
       if (!s.buffer_running) $("replay-sub").textContent = "Buffer not running";
       else if (ready < s.replay_seconds) $("replay-sub").textContent = ready + " s of " + s.replay_seconds + " s buffered";
-      else $("replay-sub").textContent = "Ready · saves an MP4 with audio";
+      else $("replay-sub").textContent = TOUCH && SECURE ? "Ready · adds a clip to Photos" : "Ready · saves an MP4 with audio";
 
       $("footer").textContent = s.capture_mode + " · " + (s.disk_free_bytes / 1e9).toFixed(0) + " GB free";
-      renderShot(s.latest_screenshot);
-      renderReplay(s.latest_replay);
+      renderRecent(s.recent);
     }
 
     async function refresh() {
@@ -439,12 +505,15 @@
         const res = await fetch(url, { method: "POST" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || res.statusText);
-        if (data.media_type === "screenshot") {
-          renderShot(data);
-          toast("Screenshot saved");
+        shownRecent = null;
+        await refresh();
+        if (!(TOUCH && !SECURE)) {
+          const result = await addToPhotos(data);
+          if (result === "again") toast("Tap Add to Photos");
+          else if (result === "opened") toast("Opened — use Save to Photos");
+          else if (result === "saved") toast("Saved · " + mb(data.size_bytes));
         } else {
-          renderReplay(data);
-          toast("Clip saved · " + mb(data.size_bytes));
+          toast("Saved. Open the secure page to add it to Photos.");
         }
       } catch (err) {
         toast(err.message, true);

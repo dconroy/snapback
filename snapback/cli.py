@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
+import subprocess
+import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 from .capture import CaptureConfig, CaptureEngine
@@ -44,6 +48,25 @@ def make_config(args: argparse.Namespace) -> CaptureConfig:
     return CaptureConfig(**{**config.__dict__, **updates})
 
 
+@contextmanager
+def _ignore_signals():
+    yield
+
+
+async def _serve(servers: list) -> None:
+    if len(servers) == 2:
+        http, https = servers
+        handle_exit = http.handle_exit
+
+        def stop_both(sig, frame):
+            https.should_exit = True
+            handle_exit(sig, frame)
+
+        http.handle_exit = stop_both
+        https.capture_signals = _ignore_signals
+    await asyncio.gather(*(server.serve() for server in servers))
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -51,11 +74,24 @@ def main() -> int:
     if args.command == "serve":
         import uvicorn
 
+        from .tls import HTTPS_PORT, certificate_hosts, ensure_certificate
         from .web import create_app
 
-        app = create_app(CaptureEngine(make_config(args)))
+        engine = CaptureEngine(make_config(args))
+        app = create_app(engine)
         # Exactly one worker: the process owns the capture device.
-        uvicorn.run(app, host=args.host, port=args.port, workers=1)
+        servers = [uvicorn.Server(uvicorn.Config(app, host=args.host, port=args.port, workers=1))]
+        try:
+            cert, key = ensure_certificate(engine.config.media_dir.parent / "tls", certificate_hosts())
+        except (OSError, subprocess.CalledProcessError) as exc:
+            print(f"HTTPS not started: {exc}", file=sys.stderr)
+        else:
+            print(f"Photos sharing: https://snapback.local:{HTTPS_PORT}/", file=sys.stderr)
+            servers.append(uvicorn.Server(uvicorn.Config(
+                app, host=args.host, port=HTTPS_PORT,
+                ssl_certfile=str(cert), ssl_keyfile=str(key), workers=1,
+            )))
+        asyncio.run(_serve(servers))
         return 0
 
     engine = CaptureEngine(make_config(args))
@@ -76,7 +112,9 @@ def main() -> int:
         engine.start_buffer()
         try:
             time.sleep(args.seconds)
-            print(json.dumps(engine.status() | {"latest_screenshot": None, "latest_replay": None}, indent=2))
+            status = engine.status() | {"latest_screenshot": None, "latest_replay": None}
+            status["recent"] = [item.to_dict() for item in status["recent"]]
+            print(json.dumps(status, indent=2))
             shot = engine.take_screenshot()
             clip = engine.save_replay()
         finally:

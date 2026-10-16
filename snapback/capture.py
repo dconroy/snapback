@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .media import latest_media
+from .media import latest_media, list_media
 
 
 DEFAULT_VIDEO_DEVICE = "/dev/video0"
@@ -26,6 +26,7 @@ DEFAULT_RUNTIME_DIR = "~/snapback-runtime"
 
 SEGMENT_TEMPLATE = "seg_%06d.ts"
 SEGMENT_RE = re.compile(r"^seg_(\d{6})\.ts$")
+RECENT_LIMIT = 12
 LATEST_FRAME_NAME = "latest.jpg"
 PREVIEW_FRAME_NAME = "preview.jpg"
 LIVE_WINDOW_SEGMENTS = 6
@@ -229,6 +230,10 @@ class CaptureEngine:
         disk_path = self.config.media_dir if self.config.media_dir.exists() else Path.home()
         screenshot = latest_media(self.config.media_dir, "screenshot")
         replay = latest_media(self.config.media_dir, "replay")
+        recent = [
+            MediaItem.from_path(path)
+            for path in list_media(self.config.media_dir)[:RECENT_LIMIT]
+        ]
         return {
             "device_detected": Path(self.config.video_device).exists(),
             "video_device": self.config.video_device,
@@ -243,6 +248,7 @@ class CaptureEngine:
             "last_error": self._last_error,
             "latest_screenshot": MediaItem.from_path(screenshot) if screenshot else None,
             "latest_replay": MediaItem.from_path(replay) if replay else None,
+            "recent": recent,
             "disk_free_bytes": shutil.disk_usage(disk_path).free,
         }
 

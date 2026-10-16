@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -32,14 +33,26 @@ def create_app(engine: CaptureEngine | None = None, start_buffer: bool | None = 
     if start_buffer is None:
         start_buffer = os.environ.get("SNAPBACK_START_BUFFER", "1") != "0"
 
+    servers = 0
+    servers_lock = threading.Lock()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        if start_buffer:
+        # HTTP and HTTPS each start this once. Stop the buffer only when both are gone.
+        nonlocal servers
+        with servers_lock:
+            servers += 1
+            first = servers == 1
+        if first and start_buffer:
             engine.start_buffer()
         try:
             yield
         finally:
-            engine.stop_buffer()
+            with servers_lock:
+                servers -= 1
+                last = servers == 0
+            if last:
+                engine.stop_buffer()
 
     app = FastAPI(title="Snapback", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     app.state.engine = engine
@@ -61,6 +74,7 @@ def create_app(engine: CaptureEngine | None = None, start_buffer: bool | None = 
         data = engine.status()
         data["latest_screenshot"] = media_json(data["latest_screenshot"])
         data["latest_replay"] = media_json(data["latest_replay"])
+        data["recent"] = [media_json(item) for item in data["recent"]]
         return data
 
     @app.post("/api/screenshot")

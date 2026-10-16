@@ -35,7 +35,7 @@ A background thread checks once per second:
 
 The ffmpeg log is at `buffer/ffmpeg-buffer.log`. Segments, the frame, and the log are cleared each time the buffer (re)starts.
 
-### "Download Last 30 Seconds" behaviour
+### "Save Last 30 Seconds" behaviour
 
 Replay takes the newest 15 **finished** segments (the one being written is skipped) and joins them with `ffmpeg -c copy` into an MP4 with `+faststart`. No re-encoding, so it takes about a second.
 
@@ -56,7 +56,9 @@ Saved to `~/snapback-runtime/captures` as `YYYYMMDDTHHMMSSZ-{screenshot|replay}-
 
 `GET /media/{filename}` only serves names matching `^[A-Za-z0-9][A-Za-z0-9_-]*\.(jpg|mp4)$` that resolve to a regular file directly inside the media directory (symlinks out are refused). Nothing from HTTP input reaches ffmpeg arguments or filesystem paths.
 
-Nothing deletes old captures yet. Clean up manually when disk gets low (shown in the status line).
+Nothing deletes old captures yet. The phone page lists the 12 newest. Clean up manually when disk gets low (shown in the status line).
+
+On a phone, Add to Photos uses the system share sheet, which iOS only allows on a secure page. Snapback also listens on `https://<pi>.local:8443/` with a certificate it generates in `~/snapback-runtime/tls/`. Accept the browser warning once; the sheet then includes Save Image and Save Video.
 
 ## Performance Notes
 

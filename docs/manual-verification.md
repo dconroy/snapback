@@ -56,7 +56,7 @@ On a phone, open `http://snapback.local:8080/`.
 
 - [ ] status line shows "Capture device OK · buffer running (Ns)"
 - [ ] Grab Screenshot shows a preview of the HDMI picture within ~1 s
-- [ ] Download Last 30 Seconds returns a clip that plays in the phone's browser with sound
+- [ ] Save Last 30 Seconds returns a clip that plays in the phone's browser with sound
 - [ ] the download link saves the MP4 to the phone (Files on iPhone, Downloads on Android); it can be moved to the photo library from there
 
 ## 4. Failure handling

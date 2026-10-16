@@ -148,9 +148,21 @@
     .live-view .badge i { width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
     .live-view .mute { position: absolute; top: 5px; right: 5px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; }
     .live-view .mute svg { width: 11px; height: 11px; }
-    .recent { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-    .recent .meta { padding: 6px 7px; font-size: 9px; }
-    .recent .meta span { font-size: 8px; }
+    .recent { display: grid; gap: 6px; }
+    .recent .row {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 6px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .recent .row img { width: 72px; height: 40px; object-fit: cover; border-radius: 7px; }
+    .recent .row b { display: block; font-size: 10px; }
+    .recent .row span { color: var(--muted); font-size: 8px; white-space: nowrap; }
+    .recent .row em { font-style: normal; font-size: 8px; font-weight: 700; white-space: nowrap; background: var(--text); color: #111; border-radius: 999px; padding: 4px 6px; }
     .clip { position: relative; display: block; }
     .clip b { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 11px; text-shadow: 0 0 6px rgba(0, 0, 0, 0.8); }
 
@@ -239,19 +251,14 @@
           </div>
           <div class="tile red">
             <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></span>
-            <span><b>Download Last 30 Seconds</b><small>Ready · saves an MP4 with audio</small></span>
+            <span><b>Save Last 30 Seconds</b><small>Ready · adds a clip to Photos</small></span>
             <span class="bar"></span>
           </div>
           <div class="label">Recent</div>
           <div class="recent">
-            <div class="shot">
-              <img class="frame" src="touchdown.jpg" alt="" width="800" height="450">
-              <div class="meta"><div>8:41 PM<span>412 KB · JPEG</span></div><em>↓</em></div>
-            </div>
-            <div class="shot">
-              <span class="clip"><img class="frame" src="touchdown.jpg" alt="" width="800" height="450"><b>▶</b></span>
-              <div class="meta"><div>8:41 PM<span>30 s · 9 MB</span></div><em>↓</em></div>
-            </div>
+            <div class="row"><img src="touchdown.jpg" alt="" width="800" height="450"><div><b>8:41 PM</b><span>Screenshot</span></div><em>Add to Photos</em></div>
+            <div class="row"><img src="touchdown.jpg" alt="" width="800" height="450"><div><b>8:40 PM</b><span>Clip · 30 s</span></div><em>Add to Photos</em></div>
+            <div class="row"><img src="touchdown.jpg" alt="" width="800" height="450"><div><b>8:12 PM</b><span>Screenshot</span></div><em>Add to Photos</em></div>
           </div>
         </div>
       </div>
@@ -345,7 +352,7 @@
   <section id="setup">
     <div class="wrap">
       <h2>Set it up in a few minutes</h2>
-      <p class="section-lede">On Raspberry Pi OS with <code>ffmpeg</code> and Python 3 installed. Full notes are in the <a href="https://github.com/dconroy/snapback#readme">README</a>.</p>
+      <p class="section-lede">On Raspberry Pi OS with <code>ffmpeg</code> and Python 3 installed. Open <code>https://&lt;your-pi&gt;.local:8443/</code> instead, and accept the certificate warning once, to add captures straight to Photos. Full notes are in the <a href="https://github.com/dconroy/snapback#readme">README</a>.</p>
 <pre><span class="c"># on the Pi</span>
 git clone https://github.com/dconroy/snapback.git ~/snapback
 cd ~/snapback

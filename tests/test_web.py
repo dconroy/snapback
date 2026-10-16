@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import tempfile
 import unittest
@@ -27,7 +28,7 @@ class WebTests(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn("Grab Screenshot", response.text)
-        self.assertIn("Download Last 30 Seconds", response.text)
+        self.assertIn("Save Last 30 Seconds", response.text)
 
     def test_status_shape(self) -> None:
         data = self.client.get("/api/status").json()
@@ -42,6 +43,7 @@ class WebTests(unittest.TestCase):
             self.assertIn(key, data)
         self.assertFalse(data["buffer_running"])
         self.assertIsNone(data["latest_screenshot"])
+        self.assertEqual(data["recent"], [])
 
     def test_screenshot_returns_media_url_that_serves_file(self) -> None:
         def fake_run(command, **kwargs):
@@ -60,6 +62,21 @@ class WebTests(unittest.TestCase):
         self.assertEqual(media.status_code, 200)
         self.assertEqual(media.headers["content-type"], "image/jpeg")
         self.assertEqual(self.client.get("/api/status").json()["latest_screenshot"]["url"], data["url"])
+
+    def test_status_lists_recent_media_newest_first(self) -> None:
+        media = self.engine.config.media_dir
+        media.mkdir()
+        older = media / "20260101T000000Z-screenshot-aaaaaaaa.jpg"
+        newer = media / "20260102T000000Z-replay-bbbbbbbb.mp4"
+        older.write_bytes(b"\xff\xd8\xff\xd9")
+        newer.write_bytes(b"mp4")
+        os.utime(older, (1_700_000_000, 1_700_000_000))
+        os.utime(newer, (1_700_000_100, 1_700_000_100))
+
+        recent = self.client.get("/api/status").json()["recent"]
+        self.assertEqual([item["filename"] for item in recent], [newer.name, older.name])
+        self.assertTrue(recent[0]["url"].endswith(newer.name))
+        self.assertNotIn("path", recent[0])
 
     def test_replay_without_buffer_is_service_unavailable(self) -> None:
         response = self.client.post("/api/replay")
