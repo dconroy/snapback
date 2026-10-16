@@ -34,6 +34,20 @@ X264_PRESETS = (
 )
 
 
+def detect_audio_device(video_device: str, sys_root: Path = Path("/sys")) -> str | None:
+    """Return the ALSA device of the sound card on the same USB device as ``video_device``."""
+    name = Path(video_device).resolve().name
+    interface = (sys_root / "class" / "video4linux" / name / "device").resolve()
+    for card in sorted(interface.parent.glob("*/sound/card*")):
+        try:
+            card_id = (card / "id").read_text().strip()
+        except OSError:
+            continue
+        if card_id:
+            return f"hw:CARD={card_id},DEV=0"
+    return None
+
+
 class CaptureError(RuntimeError):
     """Raised when the capture device or ffmpeg command fails."""
 
@@ -77,11 +91,17 @@ class CaptureConfig:
         runtime_dir = Path(env.get("SNAPBACK_RUNTIME_DIR", DEFAULT_RUNTIME_DIR)).expanduser()
         media_dir = Path(env.get("SNAPBACK_MEDIA_DIR", runtime_dir / "captures")).expanduser()
         buffer_dir = Path(env.get("SNAPBACK_BUFFER_DIR", runtime_dir / "buffer")).expanduser()
+        video_device = env.get("SNAPBACK_VIDEO_DEVICE", DEFAULT_VIDEO_DEVICE)
+        audio_device = (
+            env.get("SNAPBACK_AUDIO_DEVICE")
+            or detect_audio_device(video_device)
+            or DEFAULT_AUDIO_DEVICE
+        )
         return cls(
             media_dir=media_dir,
             buffer_dir=buffer_dir,
-            video_device=env.get("SNAPBACK_VIDEO_DEVICE", DEFAULT_VIDEO_DEVICE),
-            audio_device=env.get("SNAPBACK_AUDIO_DEVICE", DEFAULT_AUDIO_DEVICE),
+            video_device=video_device,
+            audio_device=audio_device,
             x264_preset=env.get("SNAPBACK_X264_PRESET", "ultrafast"),
         )
 

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from snapback.capture import CaptureConfig, CaptureEngine, CaptureError, DeviceBusyError
+from snapback.capture import CaptureConfig, CaptureEngine, CaptureError, DeviceBusyError, detect_audio_device
 
 JPEG = b"\xff\xd8fake-jpeg\xff\xd9"
 
@@ -96,6 +96,29 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.media_dir, Path("/tmp/qc-runtime/captures"))
         self.assertEqual(config.buffer_dir, Path("/tmp/qc-runtime/buffer"))
         self.assertEqual(config.video_device, "/dev/video0")
+
+    def test_detects_audio_card_on_same_usb_device(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sys_root = Path(tmpdir)
+            usb = sys_root / "devices" / "usb2" / "2-1"
+            (usb / "2-1:1.0").mkdir(parents=True)
+            card = usb / "2-1:1.2" / "sound" / "card2"
+            card.mkdir(parents=True)
+            (card / "id").write_text("Video\n")
+            v4l = sys_root / "class" / "video4linux" / "video0"
+            v4l.mkdir(parents=True)
+            (v4l / "device").symlink_to(usb / "2-1:1.0")
+
+            self.assertEqual(detect_audio_device("/dev/video0", sys_root), "hw:CARD=Video,DEV=0")
+            self.assertIsNone(detect_audio_device("/dev/video9", sys_root))
+
+    def test_audio_device_env_overrides_detection(self) -> None:
+        with patch.dict("os.environ", {"SNAPBACK_AUDIO_DEVICE": "hw:CARD=X,DEV=0"}, clear=True), \
+                patch("snapback.capture.detect_audio_device", return_value="hw:CARD=Video,DEV=0"):
+            self.assertEqual(CaptureConfig.from_env().audio_device, "hw:CARD=X,DEV=0")
+        with patch.dict("os.environ", {}, clear=True), \
+                patch("snapback.capture.detect_audio_device", return_value="hw:CARD=Video,DEV=0"):
+            self.assertEqual(CaptureConfig.from_env().audio_device, "hw:CARD=Video,DEV=0")
 
     def test_rejects_unknown_preset(self) -> None:
         with self.assertRaises(ValueError):

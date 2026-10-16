@@ -56,7 +56,7 @@ Environment variables, all optional. If you run Snapback as a service, put them 
 | `SNAPBACK_MEDIA_DIR` | `$SNAPBACK_RUNTIME_DIR/captures` |
 | `SNAPBACK_BUFFER_DIR` | `$SNAPBACK_RUNTIME_DIR/buffer` |
 | `SNAPBACK_VIDEO_DEVICE` | `/dev/video0` |
-| `SNAPBACK_AUDIO_DEVICE` | `hw:CARD=C4K,DEV=0` |
+| `SNAPBACK_AUDIO_DEVICE` | the sound card on the same USB device as the video device, else `hw:CARD=C4K,DEV=0` |
 | `SNAPBACK_X264_PRESET` | `ultrafast` |
 | `SNAPBACK_START_BUFFER` | `1` (set `0` to not start the buffer, e.g. for UI work) |
 
