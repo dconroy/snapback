@@ -106,6 +106,13 @@ def create_app(engine: CaptureEngine | None = None, start_buffer: bool | None = 
             raise HTTPException(status_code=404, detail="not found")
         return FileResponse(path, media_type="video/mp2t")
 
+    @app.get("/snapback-ca.crt")
+    def ca_certificate() -> FileResponse:
+        path = engine.config.media_dir.parent / "tls" / "ca.pem"
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="not found")
+        return FileResponse(path, media_type="application/x-x509-ca-cert", filename="snapback-ca.crt")
+
     @app.get("/media/{filename}")
     def media(filename: str) -> FileResponse:
         path = safe_media_path(engine.config.media_dir, filename)

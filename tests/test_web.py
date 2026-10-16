@@ -107,6 +107,16 @@ class WebTests(unittest.TestCase):
         self.assertEqual(segment.status_code, 200)
         self.assertEqual(segment.headers["content-type"], "video/mp2t")
 
+    def test_ca_certificate_is_downloadable(self) -> None:
+        self.assertEqual(self.client.get("/snapback-ca.crt").status_code, 404)
+        path = self.engine.config.media_dir.parent / "tls" / "ca.pem"
+        path.parent.mkdir()
+        path.write_text("TESTCA")
+        response = self.client.get("/snapback-ca.crt")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["content-type"], "application/x-x509-ca-cert")
+        self.assertEqual(response.content, b"TESTCA")
+
     def test_media_route_rejects_paths_outside_media_dir(self) -> None:
         for url in ("/media/..%2Fsecret.jpg", "/media/../secret.jpg", "/media/nope.jpg", "/media/x.txt"):
             with self.subTest(url=url):

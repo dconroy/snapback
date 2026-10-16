@@ -58,7 +58,7 @@ Saved to `~/snapback-runtime/captures` as `YYYYMMDDTHHMMSSZ-{screenshot|replay}-
 
 Nothing deletes old captures yet. The phone page lists the 12 newest. Clean up manually when disk gets low (shown in the status line).
 
-On a phone, Add to Photos uses the system share sheet, which iOS only allows on a secure page. Snapback also listens on `https://<pi>.local:8443/` with a certificate it generates in `~/snapback-runtime/tls/`. Accept the browser warning once; the sheet then includes Save Image and Save Video.
+On a phone, Add to Photos uses the system share sheet, which iOS only allows on a secure page. Snapback creates a local CA and a server certificate in `~/snapback-runtime/tls/` and listens on `https://<pi>.local:8443/`. Download `http://<pi>.local:8080/snapback-ca.crt`, install that profile, and enable full trust for it. The sheet then includes Save Image and Save Video, with no browser warning.
 
 ## Performance Notes
 

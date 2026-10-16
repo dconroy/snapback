@@ -47,7 +47,7 @@ python3 -m venv .venv
 
 Then open `http://<your-pi>.local:8080/` on your phone. The rolling buffer starts with the app, so give it ~30 seconds before the first replay has full length.
 
-To add captures to Photos, open `https://<your-pi>.local:8443/` instead and accept the certificate warning once. The phone can then offer Save Image or Save Video. The plain `http` page can only download files.
+To add captures to Photos, install the local certificate from `http://<your-pi>.local:8080/snapback-ca.crt`, turn it on in the phone's certificate trust settings, then open `https://<your-pi>.local:8443/`. The phone can then offer Save Image or Save Video. The plain `http` page can only download files.
 
 To run it as a service or start it at boot, see [docs/pi-startup.md](docs/pi-startup.md).
 
