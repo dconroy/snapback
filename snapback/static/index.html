@@ -231,6 +231,7 @@
       background: repeating-linear-gradient(135deg, var(--surface), var(--surface) 10px, #181a1f 10px, #181a1f 20px);
     }
 
+    .hint { margin: 12px 4px 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
     footer { margin-top: 20px; text-align: center; font-size: 12px; line-height: 1.6; color: var(--muted); }
 
     #toast {
@@ -290,12 +291,15 @@
     <div class="card" id="latest-shot"><div class="empty">No screenshot yet</div></div>
     <div class="card" id="latest-replay"><div class="empty">No clip yet</div></div>
   </div>
+  <p id="save-hint" class="hint" hidden>To save to Photos: tap the save button, then long-press the photo and choose Save to Photos, or for a clip tap Share and choose Save Video.</p>
 
   <footer><span id="footer"></span><br>Home project, provided as-is without warranty. You're responsible for what you capture.</footer>
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const TOUCH = matchMedia("(pointer: coarse)").matches;
+    $("save-hint").hidden = !TOUCH;
     let shownShot = null;
     let shownReplay = null;
     let toastTimer = null;
@@ -340,7 +344,8 @@
       const a = document.createElement("a");
       a.className = "open";
       a.href = item.url;
-      a.download = item.filename;
+      if (TOUCH) a.target = "_blank";
+      else a.download = item.filename;
       a.setAttribute("aria-label", label);
       a.innerHTML = ICONS.save;
       r.append(meta, a);
