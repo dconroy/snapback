@@ -94,3 +94,7 @@ Unit tests mock ffmpeg and need no hardware. Hardware checks are in [docs/manual
 - [docs/capture-engine.md](docs/capture-engine.md): `CaptureEngine` and CLI utilities.
 - [docs/manual-verification.md](docs/manual-verification.md): on-Pi verification checklist.
 - [docs/pi-startup.md](docs/pi-startup.md): running as a systemd service and starting at boot.
+
+## License
+
+[MIT](LICENSE). You can use, modify, and share it, including the copyright notice. It is provided as-is; read [DISCLAIMER.md](DISCLAIMER.md).

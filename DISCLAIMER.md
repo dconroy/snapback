@@ -1,6 +1,6 @@
 # Disclaimer
 
-Snapback is a personal home project shared as-is. By using it, you accept the following.
+Snapback is a personal home project shared as-is under the [MIT License](LICENSE). By using it, you accept the following.
 
 ## No Warranty
 
